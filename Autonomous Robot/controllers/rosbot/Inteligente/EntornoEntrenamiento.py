@@ -4,9 +4,21 @@ from Inteligente.HROSbotInteligente import *
 from controller import Supervisor
 
 class EntornoEntrenamiento():
-
+    """
+        Representa un entorno de entrenamiento para un algoritmo de Q-learning.
+    """
     def __init__(self, recompensaMaxima, recompensaMinima, valorPaso, penalizacion, epocas, pasos):
+        """
+            Inicializa el objeto del tipo EntornoEntrenamiento.
 
+            Args:
+                recompensaMaxima(int) : [Recompensa máxima que puede recibir un agente en su entrenamiento]
+                recompensaMinima(int) : [Recompensa máxima que puede recibir un agente en su entrenamiento]
+                valorPaso(int) : [Valor que sumará el agente en cada paso]
+                penalizacion(int) : [Penalización que recibirá el agente ante un fallo]
+                epocas(int) : [Cantidad total de epocas de entrenamiento]
+                pasos(int) : [Cantidad de pasos que realizará el agente]
+        """
         self.recompensaMaxima = recompensaMaxima
         self.recompensaMinima = recompensaMinima
         self.penalizacionMaxima = penalizacion
@@ -25,8 +37,19 @@ class EntornoEntrenamiento():
 
         self.registroEntrenamiento = []
 
+#------
+
+#-----Entrenamiento-----
+
     def determinarRecompensa(self, robot,antValPos, antDistSenial):
-        
+        """
+            Determina la recompensa que recibirá el agente en base a su movimientos previos y distancia al objetivo.
+
+            Args:
+                robot(bot) : [Robot]
+                antValPos(List) : [Lista de tres posiciones con los ultimo valor de posición]
+                antDistSenial(float) : [Ultimo valor de distancia al objetivo]
+        """
         actValPosDer = round(robot.get_frontRightPositionSensor(), 1)
         actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1)
         senal = robot.get_receiver()
@@ -44,7 +67,7 @@ class EntornoEntrenamiento():
             if(robot.estimuloEncontrado(tolerancia)):
                 recompensa = self.recompensaMaxima
             elif(movimiento):
-                actDistSenial = robot.distanciaSeñal()
+                actDistSenial = robot.distanciaSenial()
                 if((antDistSenial==None)or(antDistSenial>actDistSenial)):
                     recompensa = self.recompensaMinima
                 else:
@@ -56,7 +79,15 @@ class EntornoEntrenamiento():
         print("|--> Recompensa: ", recompensa)
         return recompensa
 
+#-----
+
     def entrenamiento(self, robot):
+        """
+           Entrena un número determinado de epocas al agente, permitiendole al mismo avanzar una cantidad determinadas de pasos
+
+           Args:
+                robot(bot) : [Robot]
+        """
         puntos_partida = []
         rotacion_partida = []
         puntos_partida.append(self.ubicacionActual())
@@ -75,13 +106,13 @@ class EntornoEntrenamiento():
             actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1) 
             
             antDistSenial = None
-            if(robot.haySeñal()):
-                actDistSenial = robot.distanciaSeñal()
+            if(robot.haySenial()):
+                actDistSenial = robot.distanciaSenial()
             else:
                 actDistSenial = None
 
             robot.vaciarCola()
-            robot.resetUltimaSeñal()
+            robot.resetUltimaSenial()
 
             while((not objAlcanzado)and(j<=self.pasos)):
                 print("----------------------Paso ",j,"----------------------------------")
@@ -110,8 +141,8 @@ class EntornoEntrenamiento():
                 actValPosDer = round(robot.get_frontRightPositionSensor(), 1)
                 actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1)
 
-                if(robot.haySeñal()):
-                    actDistSenial = robot.distanciaSeñal()
+                if(robot.haySenial()):
+                    actDistSenial = robot.distanciaSenial()
                 else:
                     actDistSenial = None
 
@@ -127,37 +158,19 @@ class EntornoEntrenamiento():
                 self.registroEntrenamiento.append([i,j])
 
             puntoPartida = self.puntoInicial(puntos_partida,rotacion_partida)
-            robot.resetUltimaSeñal()
+            robot.resetUltimaSenial()
 
         del puntos_partida[1:]
         del rotacion_partida[1:]
         self.puntoInicial(puntos_partida,rotacion_partida)
         robot.guardarPoliticas()
 
-
-
-    def ubicacionActual(self):
-        self.supervisor.step(self.timestep) 
-        return self.translation.getSFVec3f()
-
-    def rotacionActual(self):
-        self.supervisor.step(self.timestep) 
-        return self.rotation.getSFRotation()
-
-    def puntoInicial(self,posicionesInicial, rotacionesInicial):
-        index = np.random.randint(0,len(posicionesInicial))
-        self.translation.setSFVec3f(posicionesInicial[index])
-        self.rotation.setSFRotation(rotacionesInicial[index])
-        self.supervisor.simulationResetPhysics()
-        return index
-    
-    def get_toleranciaMovimiento(self):
-        return self.toleranciaMovimiento
-
-    def set_toleranciaMovimiento(self, value):
-        self.toleranciaMovimiento = value
+#-----
 
     def visualizarRegistroEntrenamiento(self):
+        """
+            Visualiza en un gráfico el proceso de entrenamiento.
+        """
         epocas = [lista[0] for lista in self.registroEntrenamiento]
         pasos = [lista[1] for lista in self.registroEntrenamiento]
 
@@ -168,4 +181,61 @@ class EntornoEntrenamiento():
         plt.ylabel('Pasos')
         plt.grid(True)
         plt.show()
+#-----
 
+#----Ubicación y Rotación------
+
+    def ubicacionActual(self):
+        """
+            Retorna la ubicación exácta del agente dentro del simulador.
+        """
+        self.supervisor.step(self.timestep) 
+        return self.translation.getSFVec3f()
+
+#-----
+
+    def rotacionActual(self):
+        """
+            Retorna la rotación exácta del agente dentro del simulador.
+        """
+        self.supervisor.step(self.timestep) 
+        return self.rotation.getSFRotation()
+
+#-----
+
+    def puntoInicial(self,posicionesInicial, rotacionesInicial):
+        """
+            Ubica al agente dentro del entorno en base a un conjunto de posiciones y rotaciones iniciales.
+
+            Retorna el indice de la posición en la cual se encuentra el agente.
+
+            Args:
+                posicionesInicial(List) : [Lista de n posiciones que almacena las diferentes posiciones iniciales]
+                rotacionesInicial(List) : [Lista de n posiciones que almacena las diferentes rotaciones iniciales]
+        """
+        index = np.random.randint(0,len(posicionesInicial))
+        self.translation.setSFVec3f(posicionesInicial[index])
+        self.rotation.setSFRotation(rotacionesInicial[index])
+        self.supervisor.simulationResetPhysics()
+        return index
+
+#-----
+
+    def get_toleranciaMovimiento(self):
+        """
+            Retorna el atributo toleranciaMovimiento de la clase.
+        """
+        return self.toleranciaMovimiento
+
+#-----
+
+    def set_toleranciaMovimiento(self, value):
+        """
+            Actualiza el valor de toleranciaMovimiento.
+
+            Args:
+                value(float) : [Nuevo valor de tolerancia al movimiento]
+        """
+        self.toleranciaMovimiento = value
+
+#----------

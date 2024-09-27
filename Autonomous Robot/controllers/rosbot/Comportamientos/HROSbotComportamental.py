@@ -5,25 +5,43 @@ import math
 import numpy as np
 
 class HROSbotComportamental(HROSbot):
+    """
+        Representa al robot husuario robot con comportamientos definidos.
+
+        Esta clase extiende de HROSbot, heredando de la misma todos los atributos y métodos.
+    """
 
     def __init__(self, bot):
+        """
+            Inicializa un objeto de tipo HROSbotComportamental.
+
+            Llama al constructor de la clase padre e inicializa atributos que se utilizarán para la definición de comportamientos.
+
+            Args:
+                robot (bot): [Robot]
+        """
         super().__init__(bot)
         self.exploracion = False
         self.anguloAnterior = 0.5
         self.maximoGiroDerecha = 0.25
         self.maximoGiroIzquierda = 0.25
-        
+
+#-----Comportamientos----- 
+
     def ir_estimulo(self):
-        #Detecta la señal e intenta dirigirse a ella. 
+        """
+            Busca la señal de un Emmiter y en caso de encontrarla orienta el robot hacia la misma y avanza la distancia que hay entre él y el emisor.
+
+        """
         self.robot.step(self.robotTimestep)
         print("-----> Ir_estimulo")
         velocidad = self.speed
         finaliza = False
         giro = False
 
-        if (self.haySeñal()):
+        if (self.haySenial()):
             direccion = self.receiver.getEmitterDirection() #1: x; 2: y; 3:z;
-            self.actualizarSeñal() 
+            self.actualizarSenial() 
             if (direccion[0]<1):
                 if(direccion[1]>0):
                     self.robot.step(self.robotTimestep)
@@ -36,19 +54,23 @@ class HROSbotComportamental(HROSbot):
 
                 if(giro):
                     self.actualizarOrientación(math.atan2(direccion[1], direccion[0]))
-                    distancia = self.distanciaSeñal()
+                    distancia = self.distanciaSenial()
                     self.vaciarCola()
                     finaliza = self.avanzar(distancia,velocidad)
-                    self.actualizarSeñal() 
+                    self.actualizarSenial() 
             self.vaciarCola()
-            self.robot.step(self.robotTimestep)
-
+            
         return finaliza
 
-#------
-   
-#----
+#-----
+
     def evitarObstaculo(self, obstaculo):
+        """
+            En base a la distancia y el punto de más cercano al obstaculo (pasado por parámetro) gira el robot y avanza hasta que el obstaculo ya no exista.
+
+            Args:
+                obstaculo(list) : [Lista de tres elementos. Primer posición: punto del lidar; Segunda posición: lado del obstaculo; Tercera posición: distancia más cercana al obstaculo]
+        """
         #Evita el obstaculo.
         print("-----> Evitar Obstaculo")
         self.robot.step(self.robotTimestep)
@@ -76,7 +98,7 @@ class HROSbotComportamental(HROSbot):
                 nuevoObstaculo = self.getObstaculoAlFrente()
 
             self.robot.step(self.robotTimestep)
-            self.actualizarSeñal()
+            self.actualizarSenial()
 
             while((self.getObstaculoADerecha()!=None)and(finaliza)):
                 if(self.getObstaculoAlFrente(0.1)==None):
@@ -103,7 +125,7 @@ class HROSbotComportamental(HROSbot):
                 nuevoObstaculo = self.getObstaculoAlFrente()
 
             self.robot.step(self.robotTimestep)
-            self.actualizarSeñal()
+            self.actualizarSenial()
 
             while((self.getObstaculoAIzquierda()!=None)and(finaliza)):
                 if(self.getObstaculoAlFrente(0.1)==None):
@@ -112,7 +134,11 @@ class HROSbotComportamental(HROSbot):
                     finaliza = False  
 
     def evitarObstaculoGuiado(self):
-        #Evita un obstaculo girando para donde este la última señal. En caso de no poder llama a evitarObstaculo()
+        """
+            Evita un obstaculo girando en dirección a la última señal encontrada.
+            En caso de no poder hace un llamado al método evitarObstaculo().
+        """
+        
         self.robot.step(self.robotTimestep)
         self.vaciarCola()
         print("--> Evitar Obstaculo Guiado")
@@ -130,10 +156,10 @@ class HROSbotComportamental(HROSbot):
             if(obstaculo[0]==0):
                 if((gDeterminado==1) or (gDeterminado==3)):
                     giro = self.giroIzquierda(0.5*np.pi)
-                    self.actualizarSeñal()
+                    self.actualizarSenial()
                 else:
                     giro = self.giroDerecha(0.5*np.pi)
-                    self.actualizarSeñal()
+                    self.actualizarSenial()
 
                 if(not giro):
                     self.evitarObstaculo(obstaculo)
@@ -158,7 +184,7 @@ class HROSbotComportamental(HROSbot):
                         nuevoObstaculo = self.getObstaculoAlFrente(0.1)
 
                     self.robot.step(self.robotTimestep)
-                    self.actualizarSeñal()
+                    self.actualizarSenial()
 
                     while((self.getObstaculoAIzquierda()!=None)and(finaliza)):
                         if(self.getObstaculoAlFrente(0.1)==None):
@@ -185,7 +211,7 @@ class HROSbotComportamental(HROSbot):
                         nuevoObstaculo = self.getObstaculoAlFrente(0.1)
                     
                     self.robot.step(self.robotTimestep)
-                    self.actualizarSeñal()
+                    self.actualizarSenial()
 
                     while((self.getObstaculoADerecha()!=None)and(finaliza)):
                         if(self.getObstaculoAlFrente(0.1)==None):
@@ -197,17 +223,21 @@ class HROSbotComportamental(HROSbot):
         self.vaciarCola()
         self.robot.step(self.robotTimestep)
         self.actualizarOrientación(0.0)
+
 #-----
-#----
+
     def explorar(self):
-        #Explora el entorno. Si gira, lo hace en base a la ultima señal detectada
+        """
+            Explora el entorno decidiendo de forma aleatoria si girar o no. 
+            - Si gira, lo hace en base a la ultima señal detectada.
+        """
         print("--> Explorar")
         self.robot.step(self.robotTimestep)
         self.vaciarCola()
         velocidad = self.speed
         distancia = 1
 
-        if (not self.haySeñal()):
+        if (not self.haySenial()):
             self.exploracion = True
             probMov = np.random.uniform()
             obstaculo = self.getObstaculoAlFrente()
@@ -239,21 +269,27 @@ class HROSbotComportamental(HROSbot):
                         else:
                             gDeterminado = 1
                 if(giro):
-                    self.actualizarSeñal()
+                    self.actualizarSenial()
 
                     if(self.getObstaculoAlFrente()==None):
                         self.avanzar(distancia,velocidad)
                            
             else:
-                self.actualizarSeñal() 
+                self.actualizarSenial() 
                 self.avanzar(distancia,velocidad)
                    
             self.exploracion=False
             self.vaciarCola()
-            self.robot.step(self.robotTimestep)
+
+#----------
+
+#-----Métodos complementarios-----
 
     def actualizarOrientación(self, angulo):
-    #Actualiza la orientación del robot.
+        """
+            Actualiza la orientación del robot.
+            Almacena el angulo de giro previo y actualiza el maximo giro que puede realizar.
+        """
         if(self.exploracion):
             anguloActual=angulo+self.anguloAnterior
             self.maximoGiroIzquierda=self.maximoGiroIzquierda-angulo
@@ -267,12 +303,21 @@ class HROSbotComportamental(HROSbot):
     
 
     def determinarGiroAleatorio(self, obstaculo):
-    #Determina que giro tomar en base a la señal.
-        ultimaSeñal = self.get_ultimaSeñal()
-        if(((obstaculo==None)or(obstaculo[2]>(self.minDistancia-0.1)))and(ultimaSeñal!=None)):
+        """
+            Determina hacia que lado girar en base al obstaculo y la ultima señal detectada.
 
-            if (ultimaSeñal[0]<1):
-                if(ultimaSeñal[1]>0):
+            Retorna :
+                - 1 si el giro es hacia la izquierda.
+                - 2 si el giro es hacia la derecha.
+                - 3 si el giro es indeterminado.
+            
+            Args:
+                obstaculo(list) : [Lista de tres elementos. Primer posición: punto del lidar; Segunda posición: lado del obstaculo; Tercera posición: distancia más cercana al obstaculo]
+        """
+        ultimaSenial = self.get_ultimaSenial()
+        if(((obstaculo==None)or(obstaculo[2]>(self.minDistancia-0.1)))and(ultimaSenial!=None)):
+            if (ultimaSenial[0]<1):
+                if(ultimaSenial[1]>0):
                     giro = 1 # 1 = izquierda
                 else:
                     giro = 2 #2 = derecha
@@ -289,3 +334,4 @@ class HROSbotComportamental(HROSbot):
         print("Giro determinado: ", giro)
         return giro
 
+#----------

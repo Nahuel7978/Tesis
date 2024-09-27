@@ -22,6 +22,7 @@
 #include <webots/robot.h>
 #include <webots/emitter.h>
 #include <time.h>
+#include <string.h>
 
 #define TIME_STEP 64
 #define RANGE (127 / 2)
@@ -37,18 +38,23 @@ int main(int argc, char *argv[]) {
 
   /* get and enable devices */
 /*
-  init_devices();
+  init_devices();*/
 
   /* get a handler to the motors and set target position to infinity (speed control). */
   emitter = wb_robot_get_device("Emitter");
   
-  double message;
+  float message;
   struct timespec ts;
+  char paquete[64];
 
   while(wb_robot_step(TIME_STEP) != -1){
     clock_gettime(CLOCK_REALTIME, &ts);
     message = ts.tv_sec + ts.tv_nsec / 1e9;
-    wb_emitter_send(emitter, &message, sizeof(message));
+  
+    //copio los datos del mensaje al paquete
+    snprintf(paquete, sizeof(paquete), "%lf", message);
+    
+    wb_emitter_send(emitter, paquete, strlen(paquete) + 1);
   }
 
   return 0;

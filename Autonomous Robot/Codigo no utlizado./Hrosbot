@@ -1,0 +1,46 @@
+//Atributos
+
+        self.goal_index = 100
+        self.left_goal_index = 300
+        self.minSignal = 0.5
+        self.epsilon = 0.01
+        self.toleranciaEntreSensores = 0.05
+//
+
+
+def DisplayData(self,step):
+        print("STEP #",step)
+        print("   Acelerómetro: ", self.acelerometro.getValues())
+        print("   Giroscopio:   ", self.giroscopio.getValues())
+        print("   Sensores infrarrojos de distancia:")
+        print("       L: ",self.frontLeftSensor.getValue(),"; R: ",self.frontRightSensor.getValue())
+        print("   Hay Obstáculo: ",(self.frontLeftSensor.getValue() < self.minDistancia or self.frontRightSensor.getValue() < self.minDistancia))
+        print("   Hay Señal:    ", self.haySeñal())
+
+
+
+""""
+
+    ###
+    
+    def get_robotTimestep(self):
+        return self.robotTimestep
+
+    def set_robotTimestep(self, value):
+        self.robotTimestep = value
+
+    def get_TIMESTEP(self):
+        return self.TIMESTEP
+
+    def set_TIMESTEP(self, value):
+        self.TIMESTEP = value
+
+    
+
+    def get_acelerometro(self):
+        return self.acelerometro
+
+    
+
+
+"""
