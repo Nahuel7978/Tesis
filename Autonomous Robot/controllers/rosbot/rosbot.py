@@ -9,6 +9,7 @@ from Inteligente.HROSbotInteligente import *
 from Inteligente.EntornoEntrenamiento import * 
 import numpy as np
 import math
+import time
 
 # create the Robot instance.
 
@@ -23,15 +24,22 @@ entorno = EntornoEntrenamiento(5,2,1,-5,10,20)
 rosbotComp = HROSbotComportamental(robot)
 llegue = False
 
-rosbot.visualizarPoliticas()
+time.sleep(1)
+for _ in range(5):  # Ignorar los primeros 5 pasos del simulador
+    robot.step(timestep)
 
+rosbot.avanzarObstaculo()
+rosbot.avanzarUltimaSenial()
+
+#rosbot.visualizarPoliticas()
+"""
 rosbot.cargarPoliticas()
 rosbot.visualizarPoliticas()
 
 #entorno.entrenamiento(rosbot)    
 #entorno.visualizarRegistroEntrenamiento()
 #rosbot.visualizarPoliticas()
-#"""
+
 print("--------------")
 print("MODELO ENTRENADO")
 print("--------------")
@@ -40,11 +48,11 @@ while((robot.step(timestep) != -1)and(not llegue)):
     print("--->Comportamiento",i,"<---")
     i+=1
     rosbot.vivir()
-    llegue =  rosbot.estimuloEncontrado(0.1)
+    llegue =  rosbot.estimuloEncontrado(0.3)
     print("--------------")
     
 rosbot.displayMapa()
-#"""
+"""
 """
 #Braitenberg
 print("--------------")

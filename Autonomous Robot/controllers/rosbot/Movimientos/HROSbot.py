@@ -16,10 +16,20 @@ class HROSbot:
             Args:
                 robot (bot): [Robot]
         """
+
+        #---Inicialización.
         self.robot = bot
         self.robotTimestep = int(self.robot.getBasicTimeStep())
         self.TIMESTEP = 64
+
+        #---Atributos.
+        self.speedMax = 8
         self.speed = 5
+        self.speedMin = 2
+
+        self.distAvanceMax = 4
+        self.distAvanceMedio = 2
+        self.distAvanceMin = 1
 
         #---Activación de moteres.
         self.ruedaDerechaSuperior = self.robot.getDevice("fr_wheel_joint")
@@ -44,7 +54,7 @@ class HROSbot:
         self.lidar = self.robot.getDevice("laser")
         self.lidar.enable(self.robotTimestep)
 
-        self.front_range = 25
+        self.front_range = 20
         self.error_range = 3
 
         #---Activación de Sensores infrarojos.
@@ -89,12 +99,13 @@ class HROSbot:
         #---Objeto mapa
         self.mapping = MapaNavegacion(self)
  
- #-----Acciones-----
+ #-----Acciones primarias-----
     def avanzar(self, distancia, velocidad):
         """ 
             Permite avanzar al robot. 
 
             Activa los motores de las ruedas a una determinada velocidad y los desactiva luego de una determinada distancia.
+            Avanza siempre y cuando no detecte un obstaculo en frente con el lidar.
 
             Args:
                 distancia (float): [Distancia]
@@ -115,12 +126,9 @@ class HROSbot:
             self.ruedaDerechaInferior.setVelocity(velocidad)
             self.ruedaIzquierdaInferior.setVelocity(velocidad)
             self.ruedaIzquierdaSuperior.setVelocity(velocidad)
+    
+        self.detener()
 
-            
-        self.ruedaDerechaSuperior.setVelocity(0)
-        self.ruedaDerechaInferior.setVelocity(0)
-        self.ruedaIzquierdaInferior.setVelocity(0)
-        self.ruedaIzquierdaSuperior.setVelocity(0)
         self.anteriorValorPositionSensor[0] = self.frontLeftPositionSensor.getValue()
         self.anteriorValorPositionSensor[1] = self.frontRightPositionSensor.getValue()
         
@@ -168,10 +176,7 @@ class HROSbot:
                 rls = self.rearLeftSensor.getValue()
                 rrs = self.rearRightSensor.getValue()
             
-        self.ruedaDerechaSuperior.setVelocity(0)
-        self.ruedaDerechaInferior.setVelocity(0)
-        self.ruedaIzquierdaInferior.setVelocity(0)
-        self.ruedaIzquierdaSuperior.setVelocity(0)
+        self.detener()
         
         if((dist[0]<=distancia) or (dist[1]<=distancia)):
             return True
@@ -209,11 +214,7 @@ class HROSbot:
                 self.ruedaIzquierdaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(velocidad)
                 
-            
-        self.ruedaDerechaSuperior.setVelocity(0)
-        self.ruedaDerechaInferior.setVelocity(0)
-        self.ruedaIzquierdaInferior.setVelocity(0)
-        self.ruedaIzquierdaSuperior.setVelocity(0)
+        self.detener()
 
         self.mapping.update({'type': 'giro', 'value': ang_z})
 
@@ -254,16 +255,77 @@ class HROSbot:
                 self.ruedaIzquierdaInferior.setVelocity(0.0)
                 self.ruedaIzquierdaSuperior.setVelocity(0.0)
             
+        self.detener()
+
+        self.mapping.update({'type': 'giro', 'value': ang_z})
+
+        return giro
+    
+    def detener(self):
+        self.robot.step(self.robotTimestep) 
+        
         self.ruedaDerechaSuperior.setVelocity(0)
         self.ruedaDerechaInferior.setVelocity(0)
         self.ruedaIzquierdaInferior.setVelocity(0)
         self.ruedaIzquierdaSuperior.setVelocity(0)
 
-        self.mapping.update({'type': 'giro', 'value': ang_z})
 
-        return giro
-        
+        self.actualizarSenial();
 #----------
+
+#-----Acciones secundarias-----
+
+    def avanzarObstaculo(self):
+        """
+            Determina la distancia al obstaculo frente al robot (utilizando el LIDAR) y avanza hasta el mismo.
+        """
+        self.robot.step(self.robotTimestep)
+        obstaculo=self.getObstaculoAlFrente(4)
+
+        distancia = self.distAvanceMax;
+        velocidad = self.speedMax
+        
+        if (obstaculo!=None):
+            distancia=obstaculo[2]
+            print(distancia)
+        
+        self.avanzar(distancia, velocidad)
+
+    def avanzarSenial(self):
+        """
+            Avanza solamente si detecta una señal de radio. En cuyo caso se movera los metros equivalentes a la distancia que hay entre el robot y el emisor.
+        """
+        self.vaciarCola()
+        self.robot.step(self.robotTimestep)
+        print(self.haySenial())
+        if (self.haySenial()):
+            distancia = self.distanciaSenial()
+            velocidad = self.speed
+            print("Distancia: ",distancia)
+            self.avanzar(distancia, velocidad)
+        else:
+            self.detener()
+
+    def avanzarUltimaSenial(self):
+        """
+            Avanza la distancia almacenada en el atributo 'UltimaSenial'. En el caso que sea 'None' no se moverá.
+        """
+        self.robot.step(self.robotTimestep)
+        if (self.get_ultimaSenial()!=None):
+            distancia = self.get_distanciaUltimaSenial()
+            velocidad = self.speed
+            print("Distancia: ",distancia)
+            self.avanzar(distancia, velocidad)
+        else:
+            self.detener()
+
+    def giroIzquierdoParaleloObstaculo(self):
+        self.robot.step(self.robotTimestep)
+        self.giroIzquierda(0.5*np.pi)
+
+#----------
+
+#----Funciones sensoriales------
 
 #-----Mapa-----    
     def displayMapa(self):
@@ -492,6 +554,8 @@ class HROSbot:
             self.set_ultimaSenial(self.getEmitterDirection()) 
             self.set_distanciaUltimaSenial(self.distanciaSenial())
 
+        self.vaciarCola();
+
     def vaciarCola(self):
         """
         Vacia la cola del receiver que contiene todos los paquetes recibidos hasta el momento.
@@ -587,7 +651,7 @@ class HROSbot:
         lidar_left = lidar_data[300:365]
         obstaculo, min = self.getObstaculo(lidar_left,0.2+extra)
         return obstaculo
-    
+
     def getPuntoEnRadianes(self,index,cant_puntos=400.0):
         """
         Retorna la conversión de un punto del lidar a un angulo especifico.
