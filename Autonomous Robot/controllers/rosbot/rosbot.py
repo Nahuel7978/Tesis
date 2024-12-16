@@ -28,8 +28,12 @@ time.sleep(1)
 for _ in range(5):  # Ignorar los primeros 5 pasos del simulador
     robot.step(timestep)
 
-rosbot.avanzarObstaculo()
-rosbot.avanzarUltimaSenial()
+#rosbot.avanzarObstaculo()
+rosbot.retrocederObstaculo()
+#rosbot.avanzarUltimaSenial()
+#rosbot.giroIzquierdaParaleloObstaculo()
+#rosbot.giroAleatorioIzquierda()
+#rosbot.giroAleatorioDerecha()
 
 #rosbot.visualizarPoliticas()
 """

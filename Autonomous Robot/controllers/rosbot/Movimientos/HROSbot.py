@@ -55,6 +55,7 @@ class HROSbot:
         self.lidar.enable(self.robotTimestep)
 
         self.front_range = 20
+        self.back_range = 20
         self.error_range = 3
 
         #---Activación de Sensores infrarojos.
@@ -98,6 +99,8 @@ class HROSbot:
         
         #---Objeto mapa
         self.mapping = MapaNavegacion(self)
+
+        self.detener()
  
  #-----Acciones primarias-----
     def avanzar(self, distancia, velocidad):
@@ -243,7 +246,6 @@ class HROSbot:
         if(obstaculo==None):
             
             giro = True
-
             while ((self.robot.step(self.robotTimestep) != -1)and
                    (ang_z<(angulo))): #0.5*np.pi
                 
@@ -319,10 +321,73 @@ class HROSbot:
         else:
             self.detener()
 
-    def giroIzquierdoParaleloObstaculo(self):
+    def retrocederObstaculo(self):
+        """
+            Determina la distancia al obstaculo trasero al robot (utilizando el LIDAR) y retrocede hasta el mismo.
+        """
         self.robot.step(self.robotTimestep)
-        self.giroIzquierda(0.5*np.pi)
+        obstaculo=self.getObstaculoAtras(4)
 
+        distancia = self.distAvanceMax;
+        velocidad = self.speedMax
+        
+        if (obstaculo!=None):
+            distancia=obstaculo[2]
+            print(distancia)
+        
+        self.retroceder(distancia, velocidad)
+
+
+    def giroIzquierdaParaleloObstaculo(self):
+        """
+            Utiliza el lidar para detectar el obstaculo más cercano del lado derecho del robot y gira hasta 
+            ponerse paralelo al mismo.
+        """
+        self.robot.step(self.robotTimestep)
+        ##
+        indice= self.getObstaculoADerecha()
+        if(indice!= None):
+            #print("Indice: ", indice)<
+            angulo_obst = (indice+10) * ((2*np.pi)/400)
+
+            angulo_giro = -(angulo_obst-(np.pi/2))
+            #print("Debe girar ",angulo_giro)
+            self.giroIzquierda(angulo_giro)
+
+        
+    def giroDerechaParaleloObstaculo(self):
+        """
+            Utiliza el lidar para detectar el obstaculo más cercano del lado izquierdo del robot y gira hasta 
+            ponerse paralelo al mismo.
+        """
+        self.robot.step(self.robotTimestep)
+        ##
+        indice= self.getObstaculoAIzquierda()
+        if(indice!= None):
+            #print("Indice: ", indice)
+            angulo_obst = ((301+indice) * ((2*np.pi)/400))
+            angulo_obst = (2*np.pi)-angulo_obst
+            angulo_giro = angulo_obst-(np.pi/2)
+            #print("Debe girar ",angulo_giro)
+            self.giroDerecha(angulo_giro)
+
+    def giroAleatorioIzquierda(self):
+        """
+            Determina de forma aleatorea y uniforme un angulo de giro menor a 45 grados, para posteriormente girar
+            hacia la izquierda dicho valor.
+        """
+        angulo = np.random.uniform(low=0, high=0.25*np.pi)
+        self.robot.step(self.robotTimestep)
+        self.giroIzquierda(angulo)
+
+    def giroAleatorioDerecha(self):
+        """
+            Determina de forma aleatorea y uniforme un angulo de giro menor a 45 grados, para posteriormente girar
+            hacia la derecha dicho valor.
+        """
+        angulo = -1*np.random.uniform(low=0, high=0.25*np.pi)
+        self.robot.step(self.robotTimestep)
+        self.giroDerecha(angulo)
 #----------
 
 #----Funciones sensoriales------
@@ -589,7 +654,7 @@ class HROSbot:
         min = self.minDistancia + extra
         min_index = None
         for index in range(len(lidar_slice)):
-            if (lidar_slice[index] <= min)and(lidar_slice[index]>0):
+            if (0.1<lidar_slice[index] <= min)and(lidar_slice[index]>0):
                 min = lidar_slice[index]
                 min_index = index
         return min_index, min
@@ -620,6 +685,32 @@ class HROSbot:
             return [obstaculo,lado,min]
         return None
 
+    def getObstaculoAtras(self,extra=0):
+        """
+        Retorna un arreglo unidimensional de tres posiciones que nos brinda información del obstaculo en la parte trasera del lidar. 
+         - En la posición cero se guarda el punto del lidar en el que se encontro la mínima distancia.
+         - En la posición uno se guarda el lado ("rigth" o "left") en donde está el obstaculo.
+         - En la posición dos se guarda el valor de la mínima distancia encontrada.
+
+        La parte trasera del lidar se define por el atributo back_range.
+
+        Args:
+            extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
+        """
+        self.robot.step(self.robotTimestep)
+        lidar_data = self.lidar.getRangeImage()
+        br = self.back_range # 25
+        lidar_back = lidar_data[br+99:300-br]        # mitad primera: r, mitad izq: l
+        #print(lidar_front)
+        obstaculo, min = self.getObstaculo(lidar_back, extra)         # Retorna el número de index y le minimo valor
+        if obstaculo != None:
+            if obstaculo < 200:
+                lado = "right"
+            else:
+                lado = "left"
+            return [obstaculo,lado,min]
+        return None
+
     def getObstaculoADerecha(self,extra=0):
         """
         Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la derecha del lidar.
@@ -632,7 +723,7 @@ class HROSbot:
         self.robot.step(self.robotTimestep)
         er = self.error_range
         lidar_data = self.lidar.getRangeImage()
-        lidar_right = lidar_data[35 : 99]
+        lidar_right = lidar_data[10 : 99]
         obstaculo, min = self.getObstaculo(lidar_right,0.2+extra)
         return obstaculo
 
@@ -648,7 +739,7 @@ class HROSbot:
         self.robot.step(self.robotTimestep)
         er = self.error_range
         lidar_data = self.lidar.getRangeImage()
-        lidar_left = lidar_data[300:365]
+        lidar_left = lidar_data[300:390]
         obstaculo, min = self.getObstaculo(lidar_left,0.2+extra)
         return obstaculo
 
