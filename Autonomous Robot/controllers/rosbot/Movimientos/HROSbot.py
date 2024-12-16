@@ -388,6 +388,35 @@ class HROSbot:
         angulo = -1*np.random.uniform(low=0, high=0.25*np.pi)
         self.robot.step(self.robotTimestep)
         self.giroDerecha(angulo)
+
+    def giroSenial(self):
+        """
+            Busca una señal emitida y gira el robot hacia ella.
+
+            Retorna True si se concreto el giro y False en caso contrario.
+        """
+        self.robot.step(self.robotTimestep)
+        giro = False
+        if (self.haySenial()):
+            self.robot.step(self.robotTimestep)
+            self.actualizarSenial() 
+            direccion = self.get_ultimaSenial()
+            if (direccion[0]<1):
+                if(direccion[1]>0):
+                    self.robot.step(self.robotTimestep)
+                    obIzq=self.getObstaculoAIzquierda()
+                    print("obIzq = ",obIzq)
+                    if(obIzq==None):
+                        giro = self.giroIzquierda(math.atan2(direccion[1], direccion[0]))
+                else:
+                    self.robot.step(self.robotTimestep)
+                    if(self.getObstaculoADerecha()==None):
+                        giro = self.giroDerecha(math.atan2(direccion[1], direccion[0]))
+
+            return giro
+        else:
+            return giro
+    
 #----------
 
 #----Funciones sensoriales------
@@ -572,6 +601,7 @@ class HROSbot:
         """
             Retorna True si el número de paquetes de datos que hay en la cola del receiver es mayor a cero.
         """
+        print(self.get_receiver())
         return self.get_receiver() > 0
 
     def get_ultimaSenial(self):

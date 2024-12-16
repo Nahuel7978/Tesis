@@ -25,15 +25,18 @@ rosbotComp = HROSbotComportamental(robot)
 llegue = False
 
 time.sleep(1)
-for _ in range(5):  # Ignorar los primeros 5 pasos del simulador
+for i in range(10):  # Ignorar los primeros 5 pasos del simulador
     robot.step(timestep)
 
-#rosbot.avanzarObstaculo()
-rosbot.retrocederObstaculo()
+#
+rosbot.avanzarObstaculo()
+#rosbot.retrocederObstaculo()
 #rosbot.avanzarUltimaSenial()
 #rosbot.giroIzquierdaParaleloObstaculo()
 #rosbot.giroAleatorioIzquierda()
 #rosbot.giroAleatorioDerecha()
+
+rosbot.giroSenial()
 
 #rosbot.visualizarPoliticas()
 """
