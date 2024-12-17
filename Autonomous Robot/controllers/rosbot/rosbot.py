@@ -32,12 +32,15 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 rosbot.avanzarObstaculo()
 #rosbot.retrocederObstaculo()
 #rosbot.avanzarUltimaSenial()
+#rosbot.giroParaleloObstaculo()
+rosbot.giroParaleloObstaculoGuiado()
 #rosbot.giroIzquierdaParaleloObstaculo()
+#rosbot.giroDerechaParaleloObstaculo()
 #rosbot.giroAleatorioIzquierda()
 #rosbot.giroAleatorioDerecha()
 
-rosbot.giroSenial()
-
+#rosbot.giroSenial()
+rosbot.avanzarUltimaSenial()
 #rosbot.visualizarPoliticas()
 """
 rosbot.cargarPoliticas()
