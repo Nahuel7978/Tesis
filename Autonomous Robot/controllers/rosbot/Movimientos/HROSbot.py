@@ -113,6 +113,8 @@ class HROSbot:
             Args:
                 distancia (float): [Distancia]
                 velociada (float): [Velocidad]
+
+            Retorna True si el robot pudo avanzar y False en caso contrario.
         """
         print("  ⬆ Avanzar")
         dist = [0, 0]
@@ -151,6 +153,8 @@ class HROSbot:
             Args:
                 distancia (float): [Distancia determinada]
                 velociada (float): [Velocidad determinada]
+            
+            Retorna True si el robot pudo retoroceder y False en caso contrario.
         """
 
         print("  ⬇ Retroceder")
@@ -195,6 +199,8 @@ class HROSbot:
 
             Args:
                 angulo (float): [Angulo de giro]
+            
+            Retorna True si el robot pudo hacer el giro y False en caso contrario.
         """
         print("  ⮕ Derecha")
         velocidad = 2.0
@@ -231,6 +237,8 @@ class HROSbot:
 
             Args:
                 angulo (float): [Angulo de giro]
+
+            Retorna True si el robot pudo hacer el giro y False en caso contrario.
         """
 
         print("  ⬅ izquierda")
@@ -262,6 +270,11 @@ class HROSbot:
         return giro
     
     def detener(self):
+        """
+            Permite detener al robot completamente poniendo a cero la velocidad de los motores.
+            Luego de detenerse actualiza la señal.
+        """
+
         self.robot.step(self.robotTimestep) 
         
         self.ruedaDerechaSuperior.setVelocity(0)
@@ -278,6 +291,8 @@ class HROSbot:
     def avanzarObstaculo(self):
         """
             Determina la distancia al obstaculo frente al robot (utilizando el LIDAR) y avanza hasta el mismo.
+
+            Retorna True si el robot pudo avanzar y False en caso contrario.
         """
         self.robot.step(self.robotTimestep)
         obstaculo=self.getObstaculoAlFrente(4)
@@ -285,43 +300,61 @@ class HROSbot:
         distancia = self.distAvanceMax;
         velocidad = self.speedMax
         
+        avance = False
+
         if (obstaculo!=None):
             distancia=obstaculo[2]
             print(distancia)
         
-        self.avanzar(distancia, velocidad)
+        avance = self.avanzar(distancia, velocidad)
+
+        return avance
 
     def avanzarSenial(self):
         """
             Avanza solamente si detecta una señal de radio. En cuyo caso se movera los metros equivalentes a la distancia que hay entre el robot y el emisor.
+
+            Retorna True si el robot pudo avanzar y False en caso contrario.
         """
         self.vaciarCola()
         self.robot.step(self.robotTimestep)
-        print(self.haySenial())
+        
+        avance = False
+
         if (self.haySenial()):
             distancia = self.distanciaSenial()
             velocidad = self.speed
-            print("Distancia: ",distancia)
-            self.avanzar(distancia, velocidad)
+            avance = self.avanzar(distancia, velocidad)
         else:
             self.detener()
+        
+        return avance
 
     def avanzarUltimaSenial(self):
         """
             Avanza la distancia almacenada en el atributo 'UltimaSenial'. En el caso que sea 'None' no se moverá.
+
+            Retorna True si el robot pudo avanzar y False en caso contrario. 
         """
         self.robot.step(self.robotTimestep)
+
+        avance = False
+
         if (self.get_ultimaSenial()!=None):
             distancia = self.get_distanciaUltimaSenial()
             velocidad = self.speed
-            print("Distancia: ",distancia)
-            self.avanzar(distancia, velocidad)
+            
+            avance = self.avanzar(distancia, velocidad)
         else:
             self.detener()
+
+        return avance
 
     def retrocederObstaculo(self):
         """
             Determina la distancia al obstaculo trasero al robot (utilizando el LIDAR) y retrocede hasta el mismo.
+
+            Retorna True si el robot pudo retroceder y False en caso contrario.
         """
         self.robot.step(self.robotTimestep)
         obstaculo=self.getObstaculoAtras(4)
@@ -329,127 +362,151 @@ class HROSbot:
         distancia = self.distAvanceMax;
         velocidad = self.speedMax
         
+        retroceso = False
+
         if (obstaculo!=None):
             distancia=obstaculo[2]
-            print(distancia)
+            
         
-        self.retroceder(distancia, velocidad)
-
+        retroceso = self.retroceder(distancia, velocidad)
+        return retroceso
 
     def giroParaleloObstaculo(self):
         """
-            #
+            En el caso de que se detecte un obstaculo por el frente del robot, se procedera a girar paralelamente
+            al mismo.
+
+            Retorna True si se concreto el giro, y False en caso contrario.
         """
         self.robot.step(self.robotTimestep)
         ##
 
         obstaculo = self.getObstaculoAlFrente()
+        giro = False
 
         if(obstaculo!= None):
             if(obstaculo[0]==0):
-                self.giroIzquierda(0.5*np.pi)
+                giro= self.giroIzquierda(0.5*np.pi)
 
             elif(obstaculo[1]=="right"):
                 angulo_obst = (obstaculo[0]) * ((2*np.pi)/400)
                 angulo_giro = -(angulo_obst-(np.pi/2))
-                self.giroIzquierda(angulo_giro)
+                giro= self.giroIzquierda(angulo_giro)
             else: 
                 angulo_obst = ((360+obstaculo[0]) * ((2*np.pi)/400))
                 angulo_obst = (2*np.pi)-angulo_obst
                 angulo_giro = angulo_obst-(np.pi/2)
-                self.giroDerecha(angulo_giro)
+                giro= self.giroDerecha(angulo_giro)
+
+        return giro
             
     def giroParaleloObstaculoGuiado(self):
         """
-            #
+            En el caso de que se detecte un obstaculo por el frente del robot, se procedera a girar paralelamente
+            al mismo en direccion a la ultima señal encontrada.
+
+            Retorna True si se concreto el giro, y False en caso contrario.
         """
         obstaculo = self.getObstaculoAlFrente()
-        print("obs[0]=",obstaculo[0])
+        
+        giro = False
+
         if(obstaculo!= None):
             direccion = self.orientacionUltimaSenial()    
             if (direccion==1):
                 if(obstaculo[0]==0):
-                    self.giroIzquierda(0.5*np.pi)
+                   giro = self.giroIzquierda(0.5*np.pi)
                 else:
-                    self.robot.step(self.robotTimestep)
+                   self.robot.step(self.robotTimestep)
 
                     if(obstaculo[1]=="left"):
                         self.retroceder(0.1,2.0)
                         ang = self.getPuntoEnRadianes(360+obstaculo[0])
-                        self.giroIzquierda(((2*np.pi)-ang)*2)
-                        self.giroIzquierda(np.pi*0.5)
+                        giro = self.giroIzquierda(((2*np.pi)-ang)*2)
+                        giro = self.giroIzquierda(np.pi*0.5)
                     else:
                         angulo_obst = (obstaculo[0]) * ((2*np.pi)/400)
                         angulo_giro = -(angulo_obst-(np.pi/2))
-                        self.giroIzquierda(angulo_giro)
+                        giro = self.giroIzquierda(angulo_giro)
 
             else:
                 if(obstaculo[0]==0):
-                    self.giroDerecha(-0.5*np.pi)
+                    giro = self.giroDerecha(-0.5*np.pi)
                 else:    
                     self.robot.step(self.robotTimestep)
                     
                     if(obstaculo[1]=="right"):
                         self.retroceder(0.1,2.0)
-                        self.giroDerecha(-2*self.getPuntoEnRadianes(obstaculo[0]))
-                        self.giroDerecha(-0.5*np.pi)
+                        giro = self.giroDerecha(-2*self.getPuntoEnRadianes(obstaculo[0]))
+                        giro = self.giroDerecha(-0.5*np.pi)
                     else:
                         angulo_obst = ((360+obstaculo[0]) * ((2*np.pi)/400))
                         angulo_obst = (2*np.pi)-angulo_obst
                         angulo_giro = angulo_obst-(np.pi/2)
-                        self.giroDerecha(angulo_giro)
+                        giro = self.giroDerecha(angulo_giro)
+        
+        return giro
                 
-            
-
     def giroIzquierdaParaleloObstaculo(self):
         """
             Utiliza el lidar para detectar el obstaculo más cercano del lado derecho del robot y gira hasta 
             ponerse paralelo al mismo.
+
+            Retorna True si se concreto el giro, y False en caso contrario.
         """
         self.robot.step(self.robotTimestep)
         ##
+        giro = False
         indice= self.getObstaculoADerecha(10, 0.2)
         if(indice!= None):
-            print("Indice: ", indice)
             angulo_obst = (indice+10) * ((2*np.pi)/400)
 
             angulo_giro = -(angulo_obst-(np.pi/2))
-            print("Debe girar ",angulo_giro)
-            self.giroIzquierda(angulo_giro)
+            giro = self.giroIzquierda(angulo_giro)
         
     def giroDerechaParaleloObstaculo(self):
         """
             Utiliza el lidar para detectar el obstaculo más cercano del lado izquierdo del robot y gira hasta 
             ponerse paralelo al mismo.
+
+            Retorna True si se concreto el giro, y False en caso contrario.
         """
         self.robot.step(self.robotTimestep)
         ##
+        giro = False
         indice= self.getObstaculoAIzquierda(390, 0.2)
         if(indice!= None):
-            print("Indice: ", indice)
             angulo_obst = ((301+indice) * ((2*np.pi)/400))
             angulo_obst = (2*np.pi)-angulo_obst
             angulo_giro = angulo_obst-(np.pi/2)
-            print("Debe girar ",angulo_giro)
-            self.giroDerecha(angulo_giro)
+            giro = self.giroDerecha(angulo_giro)
+        
+        return giro
 
     def giroAleatorioIzquierda(self):
         """
             Determina de forma aleatorea y uniforme un angulo de giro menor a 45 grados, para posteriormente girar
             hacia la izquierda dicho valor.
+
+            Retorna True si se concreto el giro, y False en caso contrario.
         """
         angulo = np.random.uniform(low=0, high=0.25*np.pi)
         self.robot.step(self.robotTimestep)
-        self.giroIzquierda(angulo)
+        giro = False
+        giro = self.giroIzquierda(angulo)
+        return giro
 
     def giroAleatorioDerecha(self):
         """
             Determina de forma aleatorea y uniforme un angulo de giro menor a 45 grados, para posteriormente girar
             hacia la derecha dicho valor.
+
+            Retorna True si se concreto el giro, y False en caso contrario.
         """
         angulo = -1*np.random.uniform(low=0, high=0.25*np.pi)
         self.robot.step(self.robotTimestep)
-        self.giroDerecha(angulo)
+        giro = False
+        giro = self.giroDerecha(angulo)
 
     def giroSenial(self):
         """
@@ -718,7 +775,13 @@ class HROSbot:
 
     def orientacionUltimaSenial(self):
         """
+            Retorna la orientacion de la ultima señal almacenada.
 
+            Retorno: 
+                1 : señal a la izquierda.
+                2 : señal a la derecha.
+                3 : orientacio desconocida.
+            
         """
         self.robot.step(self.robotTimestep)
         self.actualizarSenial() 
@@ -736,6 +799,9 @@ class HROSbot:
         return giro
 
     def anguloUltimaSenial(self):
+        """
+            Retorna el angulo entre el robot y la ultima señal alamacenada.
+        """
         direccion = self.get_ultimaSenial()
         return math.atan2(direccion[1], direccion[0])
 #----------
@@ -826,9 +892,10 @@ class HROSbot:
         """
         Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la derecha del lidar.
         
-        El derecha del lidar se define por los puntos que van del [35, 99].
+        La derecha del lidar se define desde el punto recibido por parametro hasta el punto 99 que indica los 90º
         
         Args:
+            punto_inicio (integer): [Punto de inicio en el que el lidar será leido]
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
         """
         self.robot.step(self.robotTimestep)
@@ -842,9 +909,10 @@ class HROSbot:
         """
         Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la izquierda del lidar.
         
-        El derecha del lidar se define por los puntos que van del [300, 365].
+        La izquierda del lidar se define desde el punto 300 (180º) hasta el punto pasado por parametro.
         
         Args:
+            punto_fin (integer): [Punto final en el que el lidar será leido]
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
         """
         self.robot.step(self.robotTimestep)
@@ -878,6 +946,6 @@ class HROSbot:
         goal_index_en_radianes = self.getPuntoEnRadianes(goal_index)
         
         radianes = cd_index_en_radianes - goal_index_en_radianes 
-        print(cd_index_en_radianes,"-",goal_index_en_radianes,"=",radianes)
+        
         return radianes 
 #----------
