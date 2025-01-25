@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Inteligente.HROSbotInteligente import *
+from Qlearning.AdaptiveHROSbot import *
 from controller import Supervisor
 
 class EntornoEntrenamiento():
@@ -127,7 +127,7 @@ class EntornoEntrenamiento():
                 print("Estado Actual: ", estAct,". Acción: ",accion)
 
 
-                robot.ejecutarComportamiento(accion)
+                robot.ejecutar(accion)
 
                 estSig = robot.estadoActual()
                 siguienteAccion = robot.siguienteAccion(estAct)

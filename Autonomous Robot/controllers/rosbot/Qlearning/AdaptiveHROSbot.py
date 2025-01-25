@@ -1,13 +1,14 @@
 
-from Comportamientos.HROSbotComportamental import * 
+from Comportamientos.BehavioralHROSbot import * 
+from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-class HROSbotInteligente(HROSbotComportamental):
+class AdaptiveHROSbot(BehavioralHROSbot, ABC):
     """
         Representa al robot husuario robot con capacidades de adaptación y decisión de acción.
 
-        Esta clase extiende de HROSbotComportamental, heredando de la misma todos los atributos y métodos.
+        Esta clase extiende de BehavioralHROSbot, heredando de la misma todos los atributos y métodos.
     """
     def __init__(self, bot, l_rate, t_descuento, r_exploracion):
         """
@@ -27,13 +28,50 @@ class HROSbotInteligente(HROSbotComportamental):
         self.tasa_descuento = t_descuento #si esta cerca de 1 busca las recompensas lejanas
         self.prob_exploracion = r_exploracion
 
-        self.cantidadAcciones = 3 #tres comportamientos
-        self.cantidadEstados = 13 #seis estados posibles
+        self.cantidadAcciones = 3 #tres comportamientos(Por defecto)
+        self.cantidadEstados = 13 #trece estados posibles
+        
+#----------
 
+#-----Metodos Abstractos-----#
+    @abstractmethod
+    def ejecutar(self, accion):
+        """
+            Ejecuta el comportamiento pertinente en base a la acción.
+
+            Args:
+                accion(int) : [Acción tomada por el robot]
+        """
+        pass
+
+    #-----
+    @abstractmethod
+    def guardarPoliticas(self):
+        """
+            Almacena la tabla de politicas en un archivo.
+        """
+        pass
+
+    #-----
+    @abstractmethod
+    def cargarPoliticas(self):
+        """
+            Carga las politicas almacenadas en un archivo.
+        """
+        pass
+
+#-----Inicializacion de Atributos-----#
+    def putCantidadAcciones(self, acc):
+        if acc < 2:
+            raise ValueError("La cantidad de acciones debe ser mayor o igual de dos.")
+        self.cantidadAcciones=acc
+    #-----    
+    def inicializarPoliticas(self):
         #Inicializo la tabla de politicas con valores cercanos a ceros para agilizar la exploración, pero
         #minimizando el sesgo.
         self.qLearning = np.random.uniform(0, 0.05, size=(self.cantidadAcciones, self.cantidadEstados))
-#-----
+
+#----------
 
 #-----Decisión de estado/acción-----        
 
@@ -52,7 +90,7 @@ class HROSbotInteligente(HROSbotComportamental):
         if(Queque>0):
             distS = self.distanciaSenial()
         
-        obstaculo = ((self.getObstaculoADerecha(0.1)!=None) or (self.getObstaculoAIzquierda(0.1)!=None))
+        obstaculo = ((self.getObstaculoADerecha(10,0.1)!=None) or (self.getObstaculoAIzquierda(390,0.1)!=None))
 
         #--Condiciones
         if((frs>=self.limiteSensor)and(fls>=self.limiteSensor)): #No Hay Obstaculo
@@ -95,7 +133,7 @@ class HROSbotInteligente(HROSbotComportamental):
 
         return indice
     
-#-----
+    #-----
 
     def siguienteAccion(self, estadoActual):
         """
@@ -117,23 +155,8 @@ class HROSbotInteligente(HROSbotComportamental):
 
         return sigAccion
 
-#-----
+    #-----
 
-    def ejecutarComportamiento(self, accion):
-        """
-            Ejecuta el comportamiento pertinente en base a la acción.
-
-            Args:
-                accion(int) : [Acción tomada por el robot]
-        """
-        if(accion==0):
-            self.ir_estimulo()
-        elif(accion==1):
-            self.evitarObstaculoGuiado()
-        elif(accion==2):
-            self.explorar()
-
-#-----    
     def vivir(self):
         """
             Ejecuta los comportamientos en base a la tabla de politicas.
@@ -142,10 +165,12 @@ class HROSbotInteligente(HROSbotComportamental):
         """
         estAct = self.estadoActual()
         sigAcc = self.siguienteAccion(estAct)
-        self.ejecutarComportamiento(sigAcc)
-#-----
+        self.ejecutar(sigAcc)
+
+#----------
 
 #----Políticas------     
+
     def actualizarPoliticas(self, estadoActual, accionTomada, estadoSiguiente, accionSiguiente, recompensa):
         """
             Actualiza las politicas a través de Q-Learning por medio del método de Sarsa.
@@ -172,7 +197,7 @@ class HROSbotInteligente(HROSbotComportamental):
 
         print("qActual Mej: qLearning[",accionTomada,"][",estadoActual,"]= ",self.qLearning[accionTomada][estadoActual])
 
-#-----    
+    #-----    
     
     def visualizarPoliticas(self):
         """
@@ -184,26 +209,5 @@ class HROSbotInteligente(HROSbotComportamental):
         print("Q-Learning")
         print(politicas)
 
-#-----
-
-    def guardarPoliticas(self):
-        """
-            Almacena la tabla de politicas en un archivo .txt.
-        """
-        np.savetxt('politicas.txt', self.qLearning, fmt='%.5f')
-
-#-----
-
-    def cargarPoliticas(self):
-        """
-            Carga las politicas almacenadas en un archivo .txt.
-        """
-        try:
-            self.qLearning = np.loadtxt('politicas.txt')
-        except FileNotFoundError:
-            print("Error: El archivo  no existe.")
-        except Exception as e:
-            print(f"Se produjo un error inesperado: {e}")
-
-#--------
+#----------
     
