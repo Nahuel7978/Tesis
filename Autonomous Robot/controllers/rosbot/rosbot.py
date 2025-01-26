@@ -23,7 +23,7 @@ rosbot = BehavioralAdaptativeHROSbot(robot,0.1,0.7,0.2)
 rosbot_action = ActionAdaptativeHROSbot(robot,0.1,0.7,0.2)
 
 entorno = EntornoEntrenamiento(5,2,1,-5,10,20)
-entorno_acciones = EntornoEntrenamiento(5,2,1,-5,50,30)
+entorno_acciones = EntornoEntrenamiento(5,1,-1,-5,30,30)
 
 rosbotComp = BehavioralHROSbot(robot)
 llegue = False
@@ -51,17 +51,26 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 #rosbot.evitarObstaculo()
 
 
-entorno_acciones.entrenamiento(rosbot_action)    
-entorno_acciones.visualizarRegistroEntrenamiento()
+#rosbot_action.retroceder(1,2)
+#rosbot_action.giroParaleloObstaculo()
+#rosbot_action.giroAleatorioDerecha()
+
+
+#ACTION ADAPTATIVE
+#entorno_acciones.entrenamiento(rosbot_action)    
+#entorno_acciones.visualizarRegistroEntrenamiento()
+rosbot_action.cargarPoliticas()
 rosbot_action.visualizarPoliticas()
 
-#rosbot.cargarPoliticas()
-#rosbot.visualizarPoliticas()
+
+""" #BEHAVIOR ADAPTATIVE
+rosbot.cargarPoliticas()
+rosbot.visualizarPoliticas()
 
 #entorno.entrenamiento(rosbot)    
 #entorno.visualizarRegistroEntrenamiento()
 #rosbot.visualizarPoliticas()
-"""
+
 print("--------------")
 print("MODELO ENTRENADO")
 print("--------------")
@@ -75,6 +84,7 @@ while((robot.step(timestep) != -1)and(not llegue)):
     
 rosbot.displayMapa()
 """
+
 """
 #Braitenberg
 print("--------------")
