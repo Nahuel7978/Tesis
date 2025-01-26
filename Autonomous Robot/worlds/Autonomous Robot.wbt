@@ -14,8 +14,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.030292782837470403 -0.9995401889073813 0.0013259211736553565 5.283210837066722
-  position -5.151167051256154 0.43564272013789673 8.792989539401555
+  orientation -0.050465311154303735 -0.9980062567403502 0.037904668277318886 5.462496474304535
+  position -12.062378334913173 1.2501000153151376 12.579490344174536
 }
 TexturedBackground {
 }
@@ -71,8 +71,8 @@ Elisa3 {
   ]
 }
 DEF principal_robot Rosbot {
-  translation -0.916318 1.3763 0
-  rotation 0 0 1 -0.7854053071795866
+  translation -2.47284 1.91091 0
+  rotation 0 0 1 -1.5307179586088182e-05
   controller "rosbot"
   controllerArgs [
     ""

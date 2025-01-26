@@ -47,3 +47,13 @@ class BehavioralAdaptativeHROSbot(AdaptiveHROSbot):
             print("Error: El archivo  no existe.")
         except Exception as e:
             print(f"Se produjo un error inesperado: {e}")
+    
+    def visualizarPoliticas(self):
+        """
+            Visualiza la tabla de politicas.
+        """
+        filas = ['Ir a Estimulo','Evitar Obstaculo','Explorar']
+        columnas = [f"S{i}" for i in range(self.cantidadEstados)]
+        politicas = pd.DataFrame(self.qLearning, index=filas, columns=columnas)
+        print("Q-Learning")
+        print(politicas)
