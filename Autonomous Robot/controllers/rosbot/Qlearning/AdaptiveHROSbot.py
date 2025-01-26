@@ -59,6 +59,15 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
             Carga las politicas almacenadas en un archivo.
         """
         pass
+    
+    @abstractmethod
+    #-----    
+    
+    def visualizarPoliticas(self):
+        """
+            Visualiza la tabla de politicas.
+        """
+        pass
 
 #-----Inicializacion de Atributos-----#
     def putCantidadAcciones(self, acc):
@@ -197,17 +206,6 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
         print("qActual Mej: qLearning[",accionTomada,"][",estadoActual,"]= ",self.qLearning[accionTomada][estadoActual])
 
-    #-----    
-    
-    def visualizarPoliticas(self):
-        """
-            Visualiza la tabla de politicas.
-        """
-        filas = ['Ir a Estimulo','Evitar Obstaculo','Explorar']
-        columnas = [f"S{i}" for i in range(self.cantidadEstados)]
-        politicas = pd.DataFrame(self.qLearning, index=filas, columns=columnas)
-        print("Q-Learning")
-        print(politicas)
 
 #----------
     
