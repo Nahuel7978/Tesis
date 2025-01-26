@@ -64,22 +64,13 @@ class BehavioralHROSbot(HROSbot):
             finaliza = True
             
             if(self.get_ultimaSenial()!=None):
-                orientacion = self.orientacionUltimaSenial() 
+                #orientacion = self.orientacionUltimaSenial() 
                 giro = self.giroParaleloObstaculoGuiado()
 
-            print("Giro: ",giro)
             if(not giro):
-                if (obstaculo[1] == "right"):
-                    orientacion = 2
-                else:
-                    orientacion = 1
-
                 self.giroParaleloObstaculo()
-                print("orientacion: ", orientacion)
-                self.avanzarParaleloObstaculo(orientacion-1)
-            else:
-                print("orientacion: ", orientacion)
-                self.avanzarParaleloObstaculo(orientacion)
+                
+            self.avanzarParaleloObstaculo()
 
         self.vaciarCola()
         self.robot.step(self.robotTimestep)
