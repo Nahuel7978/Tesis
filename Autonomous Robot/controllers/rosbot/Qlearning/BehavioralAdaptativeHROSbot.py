@@ -7,6 +7,7 @@ class BehavioralAdaptativeHROSbot(AdaptiveHROSbot):
     def __init__(self, bot, l_rate, t_descuento, r_exploracion):
         super().__init__(bot, l_rate, t_descuento, r_exploracion)
         self.putCantidadAcciones(3)
+        self.putCantidadEstados(13)
         self.inicializarPoliticas()
 
     def ejecutar(self, accion):
@@ -22,14 +23,72 @@ class BehavioralAdaptativeHROSbot(AdaptiveHROSbot):
         Raises:
             ValueError: Si la acción no está dentro del rango permitido.
         """
+        ejecucion = False
         if(accion==0):
-            self.ir_estimulo()
+            ejecucion = self.ir_estimulo()
         elif(accion==1):
-            self.evitarObstaculo()
+            ejecucion = self.evitarObstaculo()
         elif(accion==2):
-            self.explorar()
+            ejecucion = self.explorar()
         else:
             raise ValueError(f"Acción no válida: {accion}")
+
+
+    def estadoActual(self):
+        indice = 0
+        distacia = 3
+        self.robot.step(self.robotTimestep)
+        #--Parámetros
+        of = self.getObstaculoAlFrente()
+        fls =self.frontLeftSensor.getValue() 
+        frs = self.frontRightSensor.getValue()
+        Queque = self.receiver.getQueueLength()
+        if(Queque>0):
+            distS = self.distanciaSenial()
+        
+        obstaculo = ((self.getObstaculoADerecha(10,0.1)!=None) or (self.getObstaculoAIzquierda(390,0.1)!=None))
+
+        #--Condiciones
+        if((frs>=self.limiteSensor)and(fls>=self.limiteSensor)and(of==None)): #No Hay Obstaculo
+            if((Queque<=0)): #No Hay señal
+                indice = 0
+            else:   #Hay señal
+                if(obstaculo):
+                    if(distS>distacia): #Señal Lejana
+                        indice = 1
+                    else:
+                        indice = 2 #Señal Cercana
+                else:
+                    if(distS>distacia): #Señal Lejana
+                        indice = 3
+                    else:
+                        indice = 4 #Señal Cercana
+                
+        elif(((frs>self.minDistancia)or(fls>self.minDistancia))and((of==None)or(of[2]>self.minDistancia))): #Obstaculo lejos
+            if((Queque<=0)): #No Hay señal
+                indice = 5
+            else:   #Hay señal
+                if(obstaculo):
+                    if(distS>distacia): #Señal Lejana
+                        indice = 6
+                    else:
+                        indice = 7 #Señal Cercana
+                else:
+                    if(distS>distacia): #Señal Lejana
+                        indice = 8
+                    else:
+                        indice = 9 #Señal Cercana
+        elif(of!=None): #Obstaculo Cerca
+            if((Queque<=0)): #No Hay señal
+                indice = 10
+            else:   #Hay señal
+                if(distS>3): #Señal Lejana
+                    indice = 11
+                else:
+                    indice = 12 #Señal Cercana
+
+        return indice
+    
 
     def guardarPoliticas(self):
         """

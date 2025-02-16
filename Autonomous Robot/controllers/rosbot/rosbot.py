@@ -8,7 +8,8 @@ from Comportamientos.BehavioralHROSbot import *
 from Qlearning.AdaptiveHROSbot import * 
 from Qlearning.ActionAdaptativeHROSbot import * 
 from Qlearning.BehavioralAdaptativeHROSbot import * 
-from Qlearning.EntornoEntrenamiento import * 
+from Training.ActionTraining import *
+from Training.BehavioralTraining import *
 import numpy as np
 import math
 import time
@@ -22,8 +23,8 @@ timestep = int(robot.getBasicTimeStep()) # timestep = 32
 rosbot = BehavioralAdaptativeHROSbot(robot,0.1,0.7,0.2)
 rosbot_action = ActionAdaptativeHROSbot(robot,0.1,0.7,0.2)
 
-entorno = EntornoEntrenamiento(5,2,1,-5,10,20)
-entorno_acciones = EntornoEntrenamiento(5,1,-1,-5,30,30)
+entorno = BehavioralTraining(5,2,1,-5,10,20)
+entorno_acciones = ActionTraining(5,1,-1,-5,50,35)
 
 rosbotComp = BehavioralHROSbot(robot)
 llegue = False
@@ -39,33 +40,54 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 #rosbot.giroParaleloObstaculo()
 #rosbot.giroParaleloObstaculoGuiado()
 #rosbot.giroIzquierdaParaleloObstaculo()
+#rosbot.giroIzquierdaParaleloObstaculo()
 #rosbot.giroDerechaParaleloObstaculo()
 #rosbot.giroAleatorioIzquierda()
 #rosbot.giroAleatorioDerecha()
-
+#rosbot.avanzar(1,8)
 #rosbot.giroSenial()
+#rosbot.avanzarUltimaSenial()
 #rosbot.avanzarUltimaSenial()
 #rosbot.visualizarPoliticas()
 
 #rosbot.ir_estimulo()
 #rosbot.evitarObstaculo()
 
-
-#rosbot_action.retroceder(1,2)
+#rosbot_action.avanzar(1,8)
+#rosbot_action.giroAleatorioDerecha()
+#rosbot_action.giroAleatorioDerecha()
+#rosbot_action.retroceder(1,3)
+#rosbot_action.retroceder(1,3)
 #rosbot_action.giroParaleloObstaculo()
 #rosbot_action.giroAleatorioDerecha()
 
-
+#"""
 #ACTION ADAPTATIVE
-#entorno_acciones.entrenamiento(rosbot_action)    
+entorno_acciones.entrenamiento(rosbot_action)    
 #entorno_acciones.visualizarRegistroEntrenamiento()
-rosbot_action.cargarPoliticas()
+#rosbot_action.cargarPoliticas()
 rosbot_action.visualizarPoliticas()
 
+"""
+print("--------------")
+print("MODELO ENTRENADO")
+print("--------------")
+i=1
+acc = 0
+while((robot.step(timestep) != -1)and(not llegue)):
+    print("--->Accion",i,"<---")
+    i+=1
+    acc = rosbot_action.vivir(acc)
+    llegue =  rosbot_action.estimuloEncontrado(0.3)
+    
+    print("--------------")
 
-""" #BEHAVIOR ADAPTATIVE
+#"""
+""" 
+#BEHAVIOR ADAPTATIVE
 rosbot.cargarPoliticas()
 rosbot.visualizarPoliticas()
+
 
 #entorno.entrenamiento(rosbot)    
 #entorno.visualizarRegistroEntrenamiento()

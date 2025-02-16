@@ -46,6 +46,13 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
     #-----
     @abstractmethod
+    def estadoActual(self):
+        """
+            Devuelve la posicion del estado actual en la tabla de politicas.
+        """
+
+    #-----
+    @abstractmethod
     def guardarPoliticas(self):
         """
             Almacena la tabla de politicas en un archivo.
@@ -60,9 +67,9 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
         """
         pass
     
-    @abstractmethod
-    #-----    
     
+    #-----    
+    @abstractmethod
     def visualizarPoliticas(self):
         """
             Visualiza la tabla de politicas.
@@ -74,7 +81,15 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
         if acc < 2:
             raise ValueError("La cantidad de acciones debe ser mayor o igual de dos.")
         self.cantidadAcciones=acc
+
     #-----    
+    def putCantidadEstados(self, est):
+        if est < 2:
+            raise ValueError("La cantidad de estados debe ser mayor o igual de dos.")
+        self.cantidadEstados=est
+
+    #-----    
+
     def inicializarPoliticas(self):
         #Inicializo la tabla de politicas con valores cercanos a ceros para agilizar la exploración, pero
         #minimizando el sesgo.
@@ -83,65 +98,7 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 #----------
 
 #-----Decisión de estado/acción-----        
-
-    def estadoActual(self):
-        """
-            Devuelve la posicion del estado actual en la tabla de politicas.
-        """
-        indice = 0
-        distacia = 3
-        self.robot.step(self.robotTimestep)
-        #--Parámetros
-        of = self.getObstaculoAlFrente()
-        fls =self.frontLeftSensor.getValue() 
-        frs = self.frontRightSensor.getValue()
-        Queque = self.receiver.getQueueLength()
-        if(Queque>0):
-            distS = self.distanciaSenial()
         
-        obstaculo = ((self.getObstaculoADerecha(10,0.1)!=None) or (self.getObstaculoAIzquierda(390,0.1)!=None))
-
-        #--Condiciones
-        if((frs>=self.limiteSensor)and(fls>=self.limiteSensor)): #No Hay Obstaculo
-            if((Queque<=0)): #No Hay señal
-                indice = 0
-            else:   #Hay señal
-                if(obstaculo):
-                    if(distS>distacia): #Señal Lejana
-                        indice = 1
-                    else:
-                        indice = 2 #Señal Cercana
-                else:
-                    if(distS>distacia): #Señal Lejana
-                        indice = 3
-                    else:
-                        indice = 4 #Señal Cercana
-                
-        elif(((frs>self.minDistancia)or(fls>self.minDistancia))and(of==None)): #Obstaculo lejos
-            if((Queque<=0)): #No Hay señal
-                indice = 5
-            else:   #Hay señal
-                if(obstaculo):
-                    if(distS>distacia): #Señal Lejana
-                        indice = 6
-                    else:
-                        indice = 7 #Señal Cercana
-                else:
-                    if(distS>distacia): #Señal Lejana
-                        indice = 8
-                    else:
-                        indice = 9 #Señal Cercana
-        elif(of!=None): #Obstaculo Cerca
-            if((Queque<=0)): #No Hay señal
-                indice = 10
-            else:   #Hay señal
-                if(distS>3): #Señal Lejana
-                    indice = 11
-                else:
-                    indice = 12 #Señal Cercana
-
-        return indice
-    
     #-----
 
     def siguienteAccion(self, estadoActual):
@@ -166,15 +123,16 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
     #-----
 
-    def vivir(self):
+    def vivir(self,acc):
         """
             Ejecuta los comportamientos en base a la tabla de politicas.
 
             Utiliza los métodos estadoActual() y en base a su retorno determina la acción llamando al método siguiente Accion(). Por último ejecuta el comportamiento pertinente.
         """
-        estAct = self.estadoActual()
+        estAct = self.estadoActual(acc)
         sigAcc = self.siguienteAccion(estAct)
         self.ejecutar(sigAcc)
+        return sigAcc
 
 #----------
 
