@@ -59,22 +59,24 @@ class BehavioralHROSbot(HROSbot):
         print("--> Evitar Obstaculo")
         obstaculo =  self.getObstaculoAlFrente()
         giro = False
+        finaliza = False
 
         if(obstaculo != None):
-            finaliza = True
             
             if(self.get_ultimaSenial()!=None):
-                #orientacion = self.orientacionUltimaSenial() 
                 giro = self.giroParaleloObstaculoGuiado()
 
             if(not giro):
-                self.giroParaleloObstaculo()
+                giro = self.giroParaleloObstaculo()
                 
-            self.avanzarParaleloObstaculo()
+            if(giro):
+                finaliza = self.avanzarParaleloObstaculo()
+            else:
+                finaliza = False
 
         self.vaciarCola()
         self.robot.step(self.robotTimestep)
-        return giro
+        return finaliza
 
 #-----
 
