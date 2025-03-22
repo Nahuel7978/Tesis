@@ -24,7 +24,7 @@ rosbot = BehavioralAdaptativeHROSbot(robot,0.1,0.7,0.2)
 rosbot_action = ActionAdaptativeHROSbot(robot,0.1,0.7,0.2)
 
 entorno = BehavioralTraining(5,2,1,-5,10,20)
-entorno_acciones = ActionTraining(5,1,-1,-5,50,35)
+entorno_acciones = ActionTraining(5,3,1,-1,-3,-5,50,35)
 
 rosbotComp = BehavioralHROSbot(robot)
 llegue = False
@@ -63,11 +63,12 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 
 #"""
 #ACTION ADAPTATIVE
-entorno_acciones.entrenamiento(rosbot_action)    
+#entorno_acciones.entrenamiento(rosbot_action)    
 #entorno_acciones.visualizarRegistroEntrenamiento()
-#rosbot_action.cargarPoliticas()
+rosbot_action.cargarPoliticas()
 rosbot_action.visualizarPoliticas()
 
+"""
 """
 print("--------------")
 print("MODELO ENTRENADO")
@@ -78,6 +79,7 @@ while((robot.step(timestep) != -1)and(not llegue)):
     print("--->Accion",i,"<---")
     i+=1
     acc = rosbot_action.vivir(acc)
+
     llegue =  rosbot_action.estimuloEncontrado(0.3)
     
     print("--------------")
