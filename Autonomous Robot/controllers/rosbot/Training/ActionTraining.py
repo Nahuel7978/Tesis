@@ -4,9 +4,10 @@ from Training.TrainingEnvironment import *
 
 class ActionTraining(TrainingEnvironment):
 
-    def __init__(self, recompensaMaxima, recompensaMinima, valorPaso, penalizacion, epocas, pasos):
+    def __init__(self, recompensaMaxima, recompensaMedia, recompensaMinima, valorPaso, penalizacionMedia, penalizacion, epocas, pasos):
         super().__init__(recompensaMaxima, recompensaMinima, valorPaso, penalizacion, epocas, pasos)
-
+        self.recompensaMedia = recompensaMedia
+        self.penalizacionMedia = penalizacionMedia
 
     def determinarRecompensa(self, robot, ejecucion, antDistSenial):
         senal = robot.get_receiver()
@@ -22,17 +23,23 @@ class ActionTraining(TrainingEnvironment):
             tolerancia = 0.3 
             if(robot.estimuloEncontrado(tolerancia)):
                 recompensa = self.recompensaMaxima
+
             elif(movimiento):
                 actDistSenial = robot.distanciaSenial()
-                if((antDistSenial==None)or(antDistSenial>actDistSenial)):
+
+                if((antDistSenial==None)):
                     recompensa = self.recompensaMinima
-                else:
-                    if((antDistSenial!=None)and(antDistSenial<actDistSenial)):
-                        recompensa = self.recompensaMinima
-                    else:
-                        recompensa = self.penalizacionMinima        
+
+                elif((antDistSenial<actDistSenial)):
+                    recompensa = self.penalizacionMinima
+
+                elif(antDistSenial+tolerancia>actDistSenial):
+                    recompensa = self.recompensaMedia
+                
+        elif(antDistSenial!=None):
+            recompensa = self.penalizacionMedia
+
         elif(movimiento):
-            #if(antDistSenial==None):
             recompensa = self.penalizacionMinima
 
         print("|--> Recompensa: ", recompensa)
