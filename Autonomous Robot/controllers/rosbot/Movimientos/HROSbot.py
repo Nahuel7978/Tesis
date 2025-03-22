@@ -178,7 +178,7 @@ class HROSbot:
         dist[0] = 0
         dist[1] = 0
         
-        if(rls>self.minDistancia and rrs>self.minDistancia):
+        if(rls>(self.minDistancia-0.1) and rrs>(self.minDistancia-0.1)):
             while ((self.getObstaculoAtras()==None)and
                 (dist[0]>distancia or dist[1]>distancia)and
                 (self.robot.step(self.robotTimestep) != -1)):
@@ -445,15 +445,27 @@ class HROSbot:
                 giro= self.giroIzquierda(0.5*np.pi)
 
             elif(obstaculo[1]=="right"):
-                giro= self.giroIzquierdaParaleloObstaculo()
+                obst, min = self.getObstaculoAIzquierda(350)
+                fls = self.frontLeftSensor.getValue()
+                cond = ((obst==None) and (fls>=self.minDistancia-0.12))
 
-                if(not giro):
-                    self.retroceder(0.12,2.0)
+                if(cond):
+                    giro= self.giroIzquierdaParaleloObstaculo()
+                
+                if((not cond) or (not giro)):
+                    self.retroceder(0.1,2.0)
                     giro = self.giroDerecha(-4*self.getPuntoEnRadianes(obstaculo[0]))
                     giro = self.giroDerechaParaleloObstaculo()
             else: 
-                giro= self.giroDerechaParaleloObstaculo()
-                if(not giro):
+                obst, min= self.getObstaculoADerecha(40)
+                frs = self.frontRightSensor.getValue()
+                
+                cond = ((obst==None) and (frs>=self.minDistancia-0.12))
+
+                if(cond):
+                    giro= self.giroDerechaParaleloObstaculo()
+
+                if((not cond) or (not giro)):
                     self.retroceder(0.12,2.0)
                     ang = self.getPuntoEnRadianes(360+obstaculo[0])
                     giro = self.giroIzquierda(((2*np.pi)-ang)*4)
