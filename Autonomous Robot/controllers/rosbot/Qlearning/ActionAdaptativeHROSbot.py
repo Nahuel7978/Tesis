@@ -273,6 +273,7 @@ class ActionAdaptativeHROSbot(AdaptiveHROSbot):
                         else:
                             indice = 56
 
+        print("Estado Actual:", indice)
         if(accion == 0):
             return indice
         else:
