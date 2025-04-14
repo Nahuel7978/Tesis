@@ -78,12 +78,38 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
 #-----Inicializacion de Atributos-----#
     def putCantidadAcciones(self, acc):
+        """
+            Establece la cantidad de acciones posibles en el entorno.
+
+            Este valor define la dimensión del espacio de acciones que el agente podrá ejecutar.
+            Se requiere un mínimo de dos acciones para garantizar la exploración significativa
+            y la validez del algoritmo de aprendizaje por refuerzo.
+
+            Args:
+                acc (int): Número de acciones posibles.
+
+            Raises:
+                ValueError: Si el número de acciones es menor a 2.
+        """
         if acc < 2:
             raise ValueError("La cantidad de acciones debe ser mayor o igual de dos.")
         self.cantidadAcciones=acc
 
     #-----    
     def putCantidadEstados(self, est):
+        """
+            Establece la cantidad de estados posibles en el entorno.
+
+            Este valor define la dimensión del espacio de estados que el agente podrá observar.
+            Se requiere un mínimo de dos estados para permitir que el agente diferencie entre situaciones
+            y aprenda una política útil.
+
+            Args:
+                est (int): Número de estados posibles.
+
+            Raises:
+                ValueError: Si el número de estados es menor a 2.
+        """
         if est < 2:
             raise ValueError("La cantidad de estados debe ser mayor o igual de dos.")
         self.cantidadEstados=est
@@ -91,8 +117,19 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
     #-----    
 
     def inicializarPoliticas(self):
-        #Inicializo la tabla de politicas con valores cercanos a ceros para agilizar la exploración, pero
-        #minimizando el sesgo.
+        """
+            Inicializa la tabla de valores Q para el algoritmo Q-Learning.
+
+            Genera una matriz de tamaño (cantidadAcciones x cantidadEstados) con valores
+            aleatorios pequeños entre 0 y 0.05, lo que favorece la exploración inicial del
+            espacio de políticas minimizando el sesgo hacia decisiones tempranas.
+
+            Requiere que los atributos `self.cantidadAcciones` y `self.cantidadEstados` hayan sido
+            previamente definidos mediante `putCantidadAcciones()` y `putCantidadEstados()`.
+
+            Returns:
+                None
+        """
         self.qLearning = np.random.uniform(0, 0.05, size=(self.cantidadAcciones, self.cantidadEstados))
 
 #----------
