@@ -2,6 +2,10 @@ import math
 from controller import Robot, Camera, Motor, Receiver
 from Navegacion.MapaNavegacion import *
 import numpy as np
+from itertools import combinations
+from sklearn.linear_model import RANSACRegressor
+import warnings
+from sklearn.exceptions import UndefinedMetricWarning
 
 class HROSbot: 
     """
@@ -31,6 +35,8 @@ class HROSbot:
         self.distAvanceMedio = 2
         self.distAvanceMin = 1
 
+        self.pasos = 200
+
         #---Activación de moteres.
         self.ruedaDerechaSuperior = self.robot.getDevice("fr_wheel_joint")
         self.ruedaDerechaInferior = self.robot.getDevice("rr_wheel_joint")
@@ -53,6 +59,7 @@ class HROSbot:
         #---Activación del lidar-
         self.lidar = self.robot.getDevice("laser")
         self.lidar.enable(self.robotTimestep)
+        self.lidar.enablePointCloud()
 
         self.front_range = 20
         self.back_range = 20
@@ -128,6 +135,8 @@ class HROSbot:
         frs = self.frontRightSensor.getValue()
 
         if(fls>self.minDistancia and frs>self.minDistancia):
+            dist_ant=self.metrosRecorridos()
+            p = 0
 
             while ((self.getObstaculoAlFrente()==None)and
                 (dist[0]<distancia or dist[1]<distancia)and
@@ -137,7 +146,13 @@ class HROSbot:
                 self.ruedaDerechaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(velocidad)
-    
+                if(dist==dist_ant):
+                    p+=1
+                if(p == self.pasos):
+                    break;
+                
+                dist_ant = dist
+
         self.detener()
 
         self.anteriorValorPositionSensor[0] = self.frontLeftPositionSensor.getValue()
@@ -179,6 +194,8 @@ class HROSbot:
         dist[1] = 0
         
         if(rls>(self.minDistancia-0.1) and rrs>(self.minDistancia-0.1)):
+            pasos= 0
+            dist_ant = self.metrosRecorridosHaciaAtras()
             while ((self.getObstaculoAtras()==None)and
                 (dist[0]>distancia or dist[1]>distancia)and
                 (self.robot.step(self.robotTimestep) != -1)):
@@ -189,6 +206,14 @@ class HROSbot:
                 self.ruedaDerechaInferior.setVelocity(-velocidad)
                 self.ruedaIzquierdaInferior.setVelocity(-velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(-velocidad)
+                if(dist==dist_ant):
+                    pasos+=1
+
+                if(pasos == self.pasos):
+                    break;
+                
+                dist_ant = dist
+
                 
         self.detener()
         
@@ -224,6 +249,10 @@ class HROSbot:
         #print("obst_d=",obstaculo[0])
         if(obstaculo==None and frs>=self.minDistancia-0.12):
             giro = True
+            gyroZ =self.giroscopio.getValues()[2]
+            ang_z_ant=ang_z+(gyroZ*self.robotTimestep*0.001)
+            pasos=0
+
             while ((self.robot.step(self.robotTimestep) != -1)and
                    (ang_z>(angulo))):
                 gyroZ =self.giroscopio.getValues()[2]
@@ -233,6 +262,13 @@ class HROSbot:
                 self.ruedaDerechaInferior.setVelocity(0.0)
                 self.ruedaIzquierdaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(velocidad)
+                
+                if(ang_z==ang_z_ant):
+                    paso+=1
+                if(pasos == self.pasos):
+                    giro=False
+                    break;
+                ang_z_ant = ang_z
                 
         self.detener()
 
@@ -265,6 +301,10 @@ class HROSbot:
         if(obstaculo==None and fls>=self.minDistancia-0.12):
             
             giro = True
+            gyroZ =self.giroscopio.getValues()[2]
+            ang_z_ant=ang_z+(gyroZ*self.robotTimestep*0.001)
+            pasos=0
+
             while ((self.robot.step(self.robotTimestep) != -1)and
                    (ang_z<(angulo))): #0.5*np.pi
                 
@@ -276,6 +316,13 @@ class HROSbot:
                 self.ruedaIzquierdaInferior.setVelocity(0.0)
                 self.ruedaIzquierdaSuperior.setVelocity(0.0)
             
+                if(ang_z==ang_z_ant):
+                    paso+=1
+                if(pasos == self.pasos):
+                    giro=False
+                    break;
+                ang_z_ant = ang_z
+
         self.detener()
 
         self.mapping.update({'type': 'giro', 'value': ang_z})
@@ -1068,6 +1115,160 @@ class HROSbot:
         lidar_left = lidar_data[300:punto_fin]
         obstaculo, min = self.getObstaculo(lidar_left,extra)
         return obstaculo, min
+
+    def getEsquinaFrontal(self):
+        """
+            Detecta si el robot se encuentra frente a una esquina utilizando los datos del sensor LIDAR
+            y un análisis geométrico basado en RANSAC para detectar líneas en el espacio cartesiano.
+
+            Este método convierte los datos polares del LIDAR en coordenadas cartesianas, aplica un filtro
+            para descartar puntos lejanos, y luego utiliza el algoritmo RANSAC para detectar múltiples
+            líneas rectas en el sector frontal. Si se detectan al menos dos líneas con un ángulo significativo
+            entre ellas, y el robot se encuentra a una distancia cercana, se concluye que está frente a una esquina.
+
+            Returns:
+                bool: `True` si se detecta una esquina frontal cercana, `False` en caso contrario.
+
+            Notas:
+                - Utiliza `sklearn.linear_model.RANSACRegressor`, por lo que se debe tener instalado `scikit-learn`.
+                - En caso de no contar con `scikit-learn`, el método recurre a una técnica alternativa basada en 
+                detección de discontinuidades en las lecturas LIDAR.
+        """
+        def extract_line_segments(x, y, min_samples=12, residual_threshold=0.08, max_trials=150):
+            """
+                Extrae múltiples segmentos de línea del conjunto de puntos cartesianas usando el algoritmo RANSAC.
+
+                Args:
+                    x (np.ndarray): Coordenadas X de los puntos.
+                    y (np.ndarray): Coordenadas Y correspondientes.
+                    min_samples (int): Número mínimo de puntos necesarios para ajustar una línea válida.
+                    residual_threshold (float): Umbral de tolerancia para considerar un punto como inlier.
+                    max_trials (int): Número máximo de intentos de ajuste RANSAC.
+
+                Returns:
+                    List[Tuple[np.ndarray, np.ndarray, sklearn.linear_model.base.LinearRegression]]:
+                        Lista de tuplas donde cada una contiene los puntos inliers en X, Y y el modelo ajustado.
+                        Puede retornar una lista vacía si no se detectan líneas confiables.
+            """
+            
+            if len(x) < min_samples:
+                return []
+                
+            lines = []
+            remaining_x = x.copy()
+            remaining_y = y.copy()
+            
+            while len(remaining_x) >= min_samples:
+                # Preparar datos para RANSAC
+                X = remaining_x.reshape(-1, 1)
+                y_vals = remaining_y
+                
+                # Ajustar línea con RANSAC
+                ransac = RANSACRegressor(min_samples=min_samples, 
+                                        residual_threshold=residual_threshold,
+                                        max_trials=max_trials)
+                try:
+                    # Configurar el cálculo de score solo si hay suficientes muestras
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", category=UndefinedMetricWarning)
+                        ransac.fit(X, y_vals)
+
+                    inlier_mask = ransac.inlier_mask_
+                    
+                    # Si encontramos suficientes inliers, consideramos una línea válida
+                    if sum(inlier_mask) >= min_samples:
+                        # Extraer puntos de esta línea
+                        line_x = remaining_x[inlier_mask]
+                        line_y = remaining_y[inlier_mask]
+                        lines.append((line_x, line_y, ransac.estimator_))
+                        
+                        # Remover estos puntos para la próxima iteración
+                        outlier_mask = ~inlier_mask
+                        remaining_x = remaining_x[outlier_mask]
+                        remaining_y = remaining_y[outlier_mask]
+                    else:
+                        break
+                except Exception as e:
+                    print(f"Error en RANSAC: {e}")
+                    break
+                    
+            return lines
+
+        self.robot.step(self.robotTimestep)
+        lidar_data_total = np.array(self.lidar.getRangeImage())
+        lidar_data_total[np.isinf(lidar_data_total)] = 10  # Reemplazar "inf"
+        lidar_data = np.concatenate([lidar_data_total[:40], lidar_data_total[-40:]])
+
+        # Convertir lecturas polares a cartesianas para análisis geométrico
+        num_puntos = len(lidar_data)
+        angulo_incremento = 2 * np.pi / num_puntos
+        puntos_x = []
+        puntos_y = []
+        
+        for i, distancia in enumerate(lidar_data):
+            if distancia <= 1:  # Filtrar puntos muy lejanos
+                angulo = i * angulo_incremento
+                x = distancia * np.cos(angulo)
+                y = distancia * np.sin(angulo)
+                puntos_x.append(x)
+                puntos_y.append(y)
+        
+        puntos_x = np.array(puntos_x)
+        puntos_y = np.array(puntos_y)
+        
+        # Si hay muy pocos puntos, no podemos hacer análisis confiable
+        if len(puntos_x) < 10:
+            return False
+        
+        # Intentar primero con puntos frontales (±60°)
+        frontal_indices = np.concatenate([np.arange(0, num_puntos//6), np.arange(5*num_puntos//6, num_puntos)])
+        frontal_x = []
+        frontal_y = []
+        
+        for i in frontal_indices:
+            if i < len(lidar_data) and lidar_data[i] < 8:
+                angulo = i * angulo_incremento
+                frontal_x.append(lidar_data[i] * np.cos(angulo))
+                frontal_y.append(lidar_data[i] * np.sin(angulo))
+        
+        frontal_x = np.array(frontal_x)
+        frontal_y = np.array(frontal_y)
+        
+        # Extraer líneas del sector frontal
+        try:
+            lineas_frontales = extract_line_segments(frontal_x, frontal_y)
+        except ImportError:
+            # Si no está disponible sklearn, usar método alternativo más simple
+            # Verificar discontinuidades en las distancias
+            frontal_data = np.concatenate([lidar_data[:num_puntos//6], lidar_data[5*num_puntos//6:]])
+            diffs = np.abs(np.diff(frontal_data))
+            discontinuidades = np.sum(diffs > 0.2)
+            return discontinuidades >= 2 and np.min(frontal_data) < 0.5
+        
+        # Una esquina real tendrá al menos dos líneas diferentes que se intersectan
+        # con un ángulo significativo en el sector frontal
+        if len(lineas_frontales) >= 2:
+            # Calcular ángulos entre las líneas
+            coeficientes = []
+            coeficientes = [line[2].coef_[0] for line in lineas_frontales]
+            
+            # Calcular ángulos entre líneas (en grados)
+            angulos = []
+            for i in range(len(coeficientes)):
+                for j in range(i+1, len(coeficientes)):
+                    m1, m2 = coeficientes[i], coeficientes[j]
+                    if(1+m1*m2 != 0):
+                        angulo = np.abs(np.arctan((m2-m1)/(1+m1*m2))) * 180/np.pi
+                        angulos.append(angulo)
+            
+            # Si hay un ángulo significativo entre líneas (>45°), es una esquina
+            esquina_detectada = any(angulo > 45 for angulo in angulos)
+            
+            # Verificar también que estamos cerca de la intersección
+            if esquina_detectada:
+                return np.min(lidar_data) < 0.75
+        
+        return False
 
     def getPuntoEnRadianes(self,index,cant_puntos=400.0):
         """
