@@ -75,6 +75,130 @@ class ActionAdaptativeHROSbot(AdaptiveHROSbot):
 
         return ejecucion
         
+
+    def estadoActual_2(self, accion):
+        indice = 0
+        dif_sensores = 0.03
+        min_dif = 0.06
+        dist_min = 0.15
+        self.robot.step(self.robotTimestep)
+        #--Parámetros
+        ob_f = self.getObstaculoAlFrente()
+        fls =self.frontLeftSensor.getValue() 
+        frs = self.frontRightSensor.getValue()
+
+        od, minD = self.getObstaculoADerecha(30)
+        oi, minI = self.getObstaculoAIzquierda(370)
+        print("Indice a der: ", od, " - Dist Der: ", minD, " - fls: ",fls,">=",frs+dif_sensores," :frs")
+        print("Indice a izq: ", oi, " - Dist Izq: ", minI, " - fls: ",fls+dif_sensores,"<=",frs," :frs")
+        print(" ")
+        obstaculoDer =(((od!=None)and(minD<minI)) 
+                        or ((od==None)and(frs+dif_sensores)<=fls))
+
+        obstaculoIzq = (((oi!=None)and(minI<minD)) 
+                        or ((oi==None) and((fls+dif_sensores)<=frs)))
+
+        obstaculoCercano = ((ob_f != None)or((frs<self.minDistancia)or(fls<self.minDistancia)))
+        obstaculoLejano = ((ob_f==None)and((frs<self.limiteSensor)or(fls<self.limiteSensor)))
+
+        esquina = self.getEsquinaFrontal()
+
+        print("cercano:",obstaculoCercano)
+        print("lejano:",obstaculoLejano)
+        print("izq:",obstaculoIzq)
+        print("der:", obstaculoDer)
+        print("Esquina", esquina)
+        dist_senial = self.get_distanciaUltimaSenial()
+        
+
+        if(dist_senial == None):
+            if(obstaculoCercano): ## Obstaculo cercano
+                if(esquina or (obstaculoDer and obstaculoIzq)):
+                    indice = 0
+                elif(obstaculoDer): 
+                    indice = 1
+                elif(obstaculoIzq):
+                    indice = 2
+                else: ## Solo un obstaculo en frente
+                    indice = 3
+
+            elif(obstaculoLejano): ## Obstaculo lejano
+                if(esquina or (obstaculoDer and obstaculoIzq)):
+                    indice = 4
+                elif(obstaculoDer): 
+                    indice = 5
+                elif(obstaculoIzq):
+                    indice = 6
+                else: ## Solo un obstaculo en frente
+                    indice = 7
+            else:
+                if(esquina or (obstaculoDer and obstaculoIzq)):
+                    indice = 8
+                elif(obstaculoDer): 
+                    indice = 9
+                elif(obstaculoIzq):
+                    indice = 10
+                else: ## Vía libre
+                    indice = 11
+
+        else: ## Hay señal almacenada
+            orientacion_señal = self.orientacionUltimaSenial()
+            if (obstaculoCercano): ## Obstaculo cercano
+                    if(esquina or (obstaculoDer and obstaculoIzq)):
+                        indice = 12
+                    elif(obstaculoDer): 
+                        indice = 13
+                    elif(obstaculoIzq):
+                        indice = 14
+                    else: ## Solo un obstaculo en frente
+                        indice = 15
+
+            elif(orientacion_señal == 1 ):
+                if(obstaculoLejano): ## Obstaculo lejano
+                    if(esquina or (obstaculoDer and obstaculoIzq)):
+                        indice = 16
+                    elif(obstaculoDer): 
+                        indice = 17
+                    elif(obstaculoIzq):
+                        indice = 18
+                    else: ## Solo un obstaculo en frente
+                        indice = 19
+                else:
+                    if(esquina or (obstaculoDer and obstaculoIzq)):
+                        indice = 20
+                    elif(obstaculoDer): 
+                        indice = 21
+                    elif(obstaculoIzq):
+                        indice = 22
+                    else: ## Vía libre
+                        indice = 23            
+            else:
+                if(obstaculoLejano): ## Obstaculo lejano
+                    if(esquina  or (obstaculoDer and obstaculoIzq)):
+                        indice = 24
+                    elif(obstaculoDer): 
+                        indice = 25
+                    elif(obstaculoIzq):
+                        indice = 26
+                    else: ## Solo un obstaculo en frente
+                        indice = 27
+                else:
+                    if(esquina  or (obstaculoDer and obstaculoIzq)):
+                        indice = 28
+                    elif(obstaculoDer): 
+                        indice = 29
+                    elif(obstaculoIzq):
+                        indice = 30
+                    else: ## Vía Libre
+                        indice = 31
+
+        print("Estado Actual:", indice, "Accion anterior: ", accion)
+        print(" ")
+        if(accion == 0):
+            return indice
+        else:
+            return indice+(32*(accion-1))
+
     def estadoActual(self, accion):
         indice = 0
         distacia = 3
