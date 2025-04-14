@@ -55,13 +55,13 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 
 #rosbot_action.avanzar(1,8)
 #rosbot_action.giroAleatorioDerecha()
-#rosbot_action.giroAleatorioDerecha()
+#rosbot_action.giroAleatorioIzquierda()
 #rosbot_action.retroceder(1,3)
 #rosbot_action.retroceder(1,3)
 #rosbot_action.giroParaleloObstaculo()
 #rosbot_action.giroAleatorioDerecha()
 
-#"""
+"""
 #ACTION ADAPTATIVE
 #entorno_acciones.entrenamiento(rosbot_action)    
 #entorno_acciones.visualizarRegistroEntrenamiento()
@@ -69,7 +69,7 @@ rosbot_action.cargarPoliticas()
 rosbot_action.visualizarPoliticas()
 
 """
-"""
+#"""
 print("--------------")
 print("MODELO ENTRENADO")
 print("--------------")
@@ -78,6 +78,7 @@ acc = 0
 while((robot.step(timestep) != -1)and(not llegue)):
     print("--->Accion",i,"<---")
     i+=1
+    rosbot_action.estadoActual_2(acc)
     acc = rosbot_action.vivir(acc)
 
     llegue =  rosbot_action.estimuloEncontrado(0.3)
