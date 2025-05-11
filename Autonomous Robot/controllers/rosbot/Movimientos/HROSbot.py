@@ -189,14 +189,13 @@ class HROSbot:
 
         rls = self.rearLeftSensor.getValue()
         rrs = self.rearRightSensor.getValue()
-
         dist[0] = 0
         dist[1] = 0
         
-        if(rls>(self.minDistancia-0.1) and rrs>(self.minDistancia-0.1)):
+        if(rls>(self.minDistancia-0.05) and rrs>(self.minDistancia-0.05)):
             pasos= 0
             dist_ant = self.metrosRecorridosHaciaAtras()
-            while ((self.getObstaculoAtras()==None)and
+            while (
                 (dist[0]>distancia or dist[1]>distancia)and
                 (self.robot.step(self.robotTimestep) != -1)):
                     
@@ -245,12 +244,11 @@ class HROSbot:
         self.robot.step(self.robotTimestep)
         obstaculo, min= self.getObstaculoADerecha(40)
         frs = self.frontRightSensor.getValue()
-        print("frs=",frs)
-        #print("obst_d=",obstaculo[0])
-        if(obstaculo==None and frs>=self.minDistancia-0.12):
+        print(min,">=", " and ", frs,">=",self.minDistancia-0.12)
+        print("angulo=",angulo)
+        if((obstaculo==None or min>=self.minDistancia-0.12) and frs>=self.minDistancia-0.12):
             giro = True
-            gyroZ =self.giroscopio.getValues()[2]
-            ang_z_ant=ang_z+(gyroZ*self.robotTimestep*0.001)
+            ant_gyroZ =self.giroscopio.getValues()[2]
             pasos=0
 
             while ((self.robot.step(self.robotTimestep) != -1)and
@@ -263,12 +261,12 @@ class HROSbot:
                 self.ruedaIzquierdaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(velocidad)
                 
-                if(ang_z==ang_z_ant):
+                if(gyroZ==ant_gyroZ):
                     paso+=1
                 if(pasos == self.pasos):
                     giro=False
                     break;
-                ang_z_ant = ang_z
+                ant_gyroZ = gyroZ
                 
         self.detener()
 
@@ -296,13 +294,11 @@ class HROSbot:
         self.robot.step(self.robotTimestep)        
         obstaculo, min = self.getObstaculoAIzquierda(350)
         fls = self.frontLeftSensor.getValue()
-        print("fls=",fls)
 
-        if(obstaculo==None and fls>=self.minDistancia-0.12):
+        if((obstaculo==None or min>=self.minDistancia-0.12)and fls>=self.minDistancia-0.12):
             
             giro = True
-            gyroZ =self.giroscopio.getValues()[2]
-            ang_z_ant=ang_z+(gyroZ*self.robotTimestep*0.001)
+            ant_gyroZ =self.giroscopio.getValues()[2]
             pasos=0
 
             while ((self.robot.step(self.robotTimestep) != -1)and
@@ -316,12 +312,12 @@ class HROSbot:
                 self.ruedaIzquierdaInferior.setVelocity(0.0)
                 self.ruedaIzquierdaSuperior.setVelocity(0.0)
             
-                if(ang_z==ang_z_ant):
+                if(gyroZ==ant_gyroZ):
                     paso+=1
                 if(pasos == self.pasos):
                     giro=False
                     break;
-                ang_z_ant = ang_z
+                ant_gyroZ = gyroZ
 
         self.detener()
 
@@ -366,7 +362,7 @@ class HROSbot:
             distancia=obstaculo[2]
             print(distancia)
         
-        avance = self.avanzar(distancia, velocidad)
+        avance = self.avanzar(distancia-self.minDistancia, velocidad)
 
         return avance
 
@@ -415,6 +411,9 @@ class HROSbot:
 
             Args:
                 obstaculo (integer): [1: Obstaculo a la izquierda. 2/otro: Obstaculo a la derecha]
+            
+            Return:
+                Si avanzo un metro o más retorna True
         """
         index, distanciaDer = self.getObstaculoADerecha(40, 0.5)
         index, distanciaIzq = self.getObstaculoAIzquierda(360,0.5)
@@ -471,7 +470,7 @@ class HROSbot:
         retroceso = self.retroceder(distancia, velocidad)
         return retroceso
 
-    def giroParaleloObstaculo(self):
+    def giroParaleloObstaculo(self, pasos=0):
         """
             En el caso de que se detecte un obstaculo por el frente del robot, se procedera a girar paralelamente
             al mismo.
@@ -481,6 +480,7 @@ class HROSbot:
         giro = False
         self.robot.step(self.robotTimestep)
         ##
+        print("Giro paraleo obstaculo. Pasos:",pasos)
         obstaculo = self.getObstaculoAlFrente(0.2)
         if((obstaculo==None)and((self.get_frontLeftSensor()<self.minDistancia)or(self.get_frontRightSensor()<self.minDistancia))):
             self.retroceder(0.1,2.0)
@@ -494,7 +494,7 @@ class HROSbot:
             elif(obstaculo[1]=="right"):
                 obst, min = self.getObstaculoAIzquierda(350)
                 fls = self.frontLeftSensor.getValue()
-                cond = ((obst==None) and (fls>=self.minDistancia-0.12))
+                cond = ((obst==None or min>=self.minDistancia-0.12) and (fls>=self.minDistancia-0.12))
 
                 if(cond):
                     giro= self.giroIzquierdaParaleloObstaculo()
@@ -506,17 +506,33 @@ class HROSbot:
             else: 
                 obst, min= self.getObstaculoADerecha(40)
                 frs = self.frontRightSensor.getValue()
-                
-                cond = ((obst==None) and (frs>=self.minDistancia-0.12))
+                #print("cond = ((",obst,"==None or (",min,">=",self.minDistancia-0.12,")) and (",frs,">=",self.minDistancia-0.12,"))")
+                cond = ((obst==None or min>=self.minDistancia-0.12) and (frs>=self.minDistancia-0.12))
 
                 if(cond):
                     giro= self.giroDerechaParaleloObstaculo()
 
                 if((not cond) or (not giro)):
-                    self.retroceder(0.12,2.0)
+                    self.retroceder(0.1,2.0)
                     ang = self.getPuntoEnRadianes(360+obstaculo[0])
                     giro = self.giroIzquierda(((2*np.pi)-ang)*4)
                     giro = self.giroIzquierdaParaleloObstaculo()
+        
+            if(pasos<=3):
+                if(pasos==3):
+                    self.retroceder(0.1,2.0)
+                    if(obstaculo[1]=="right"):
+                        if(cond):
+                            giro = self.giroIzquierda(0.5*np.pi)
+                        else:
+                            giro = self.giroDerecha(-0.5*np.pi)
+                    else:
+                        if(cond):
+                            giro = self.giroDerecha(-0.5*np.pi)
+                        else:
+                            giro = self.giroIzquierda(0.5*np.pi)
+                else:
+                    self.giroParaleloObstaculo(pasos+1)           
         return giro
             
     def giroParaleloObstaculoGuiado(self):
@@ -574,6 +590,7 @@ class HROSbot:
         """
         self.robot.step(self.robotTimestep)
         ##
+        print("giro a izquierda Paralelo Obsts")
         giro = False
         obstaculo = False
 
@@ -588,16 +605,23 @@ class HROSbot:
             obstaculo = ((fls<self.minDistancia+0.2)or(frs<self.minDistancia+0.2))
        
         if((indice!= None)and(obstaculo)):
-            retrocedio= self.retroceder(0.12,2.0)
+            retrocedio= self.retroceder(0.2,2.0)
             self.robot.step(self.robotTimestep)
-            indice, min= self.getObstaculoADerecha(0, 0.2)
-            print("indice: ",indice)
+            indice, min= self.getObstaculoADerecha(0, 0.4)
+            #print("indice: ",indice, " min",min)
 
             if((indice!= None)):
                 angulo_obst = (indice) * ((2*np.pi)/400)
-                angulo_giro = -(angulo_obst-(np.pi/2))
+                #angulo_giro = -(angulo_obst-(3*np.pi/2))
+                # calculamos el giro para que el rayo quede a +90° (π/2)
+                raw_giro = np.pi/2 - angulo_obst
+                # normalizamos a [-π, π]
+                angulo_giro = (raw_giro + np.pi) % (2*np.pi) - np.pi
                 
-                giro = self.giroIzquierda(angulo_giro)
+                if(angulo_giro==0):
+                    giro = self.giroIzquierda(np.pi/2)
+                else:
+                    giro = self.giroIzquierda(angulo_giro)
 
         return giro
         
@@ -627,7 +651,7 @@ class HROSbot:
         print("ind: ",indice, "obst: ",obstaculo)
         
         if((indice!= None)and(obstaculo)):
-            retrocedio = self.retroceder(0.12,2.0)
+            retrocedio = self.retroceder(0.2,2.0)
             self.robot.step(self.robotTimestep)
             indice, min= self.getObstaculoAIzquierda(400, 0.4)
             print("ind: ",indice)
@@ -636,8 +660,11 @@ class HROSbot:
                 angulo_obst = ((indice+300) * ((2*np.pi)/400))
                 angulo_obst = (2*np.pi)-angulo_obst
                 angulo_giro = angulo_obst-(np.pi/2)
-            
-                giro = self.giroDerecha(angulo_giro)
+
+                if(angulo_giro==0):
+                    giro = self.giroDerecha(-np.pi/2)
+                else:
+                    giro = self.giroDerecha(angulo_giro)
             
         return giro
 
@@ -892,7 +919,7 @@ class HROSbot:
         Args:
             tolerancia (float): [Distancia extra a la distancia límite en la que se considera que se llego a la señal].
         """
-        self.robot.step(self.robotTimestep)
+        self.activateRobotTimestep()
         encontrado = False
         distUltimaSen = self.get_distanciaUltimaSenial()
         
@@ -948,6 +975,7 @@ class HROSbot:
         Coloca un valor por defecto en el atributo "ultimaSenial"
         """
         self.set_ultimaSenial(None)
+        self.set_distanciaUltimaSenial(None)
 
     def actualizarSenial(self):
         """
@@ -1297,3 +1325,19 @@ class HROSbot:
         
         return radianes 
 #----------
+
+#----- Actualizar paso ----
+    def activateRobotTimestep(self):
+        """_summary_
+        """
+        for i in range(0,2):
+            self.robot.step(self.robotTimestep)
+
+#----- Atributos de la clase----
+    def getRobotTimestep(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        return self.robotTimestep
