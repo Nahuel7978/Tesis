@@ -38,6 +38,7 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 #rosbot.retrocederObstaculo()
 #rosbot.avanzarUltimaSenial()
 #rosbot.giroParaleloObstaculo()
+
 #rosbot.giroParaleloObstaculoGuiado()
 #rosbot.giroIzquierdaParaleloObstaculo()
 #rosbot.giroIzquierdaParaleloObstaculo()
@@ -61,14 +62,15 @@ for i in range(10):  # Ignorar los primeros 5 pasos del simulador
 #rosbot_action.giroParaleloObstaculo()
 #rosbot_action.giroAleatorioDerecha()
 
-"""
+
 #ACTION ADAPTATIVE
+rosbot_action.cargarPoliticas()
 #entorno_acciones.entrenamiento(rosbot_action)    
 #entorno_acciones.visualizarRegistroEntrenamiento()
-rosbot_action.cargarPoliticas()
+#rosbot_action.cargarPoliticas()
 rosbot_action.visualizarPoliticas()
 
-"""
+
 #"""
 print("--------------")
 print("MODELO ENTRENADO")
