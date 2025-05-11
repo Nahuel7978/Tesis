@@ -95,6 +95,10 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
             raise ValueError("La cantidad de acciones debe ser mayor o igual de dos.")
         self.cantidadAcciones=acc
 
+    #----
+    def getCantidadAcciones(self):
+        return self.cantidadAcciones
+
     #-----    
     def putCantidadEstados(self, est):
         """
@@ -113,6 +117,9 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
         if est < 2:
             raise ValueError("La cantidad de estados debe ser mayor o igual de dos.")
         self.cantidadEstados=est
+    #----
+    def getCantidadEstados(self):
+        return self.cantidadEstados
 
     #-----    
 
@@ -130,7 +137,7 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
             Returns:
                 None
         """
-        self.qLearning = np.random.uniform(0, 0.05, size=(self.cantidadAcciones, self.cantidadEstados))
+        self.qLearning = np.random.uniform(0, 0.05, size=(self.getCantidadAcciones(), self.getCantidadEstados()))
 
 #----------
 
@@ -166,7 +173,7 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
             Utiliza los métodos estadoActual() y en base a su retorno determina la acción llamando al método siguiente Accion(). Por último ejecuta el comportamiento pertinente.
         """
-        estAct = self.estadoActual(acc)
+        estAct = self.estadoActual_2(acc)
         sigAcc = self.siguienteAccion(estAct)
         self.ejecutar(sigAcc)
         return sigAcc
