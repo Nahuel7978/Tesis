@@ -10,7 +10,7 @@ class ActionTraining(TrainingEnvironment):
         self.penalizacionMedia = penalizacionMedia
 
     
-    def determinarRecompensa2(self, robot, ejecucion, estadoAnterior, estadoActual, senialAct =0, senialAnt = 0 ,DistSenialAlm=None, AngSenialAlm=None):    
+    def determinarRecompensa(self, robot, ejecucion, estadoAnterior, estadoActual, senialAct =0, senialAnt = 0 ,DistSenialAlm=None, AngSenialAlm=None):    
         robot.activateRobotTimestep()
         reconexion = False
         angMejora = 0
@@ -191,46 +191,6 @@ class ActionTraining(TrainingEnvironment):
 
         print("recompensa: ", recompensa)
         return recompensa
-                    
-
-
-    
-    def determinarRecompensa(self, robot, ejecucion, antDistSenial):
-        senal = robot.get_receiver()
-        recompensa =  0
-        movimiento = False
-
-        if(not ejecucion):
-            recompensa = self.penalizacionMaxima
-        else:
-            movimiento = True
-
-        if(senal>0):
-            tolerancia = 0.3 
-            if(robot.estimuloEncontrado(tolerancia)):
-                recompensa = self.recompensaMaxima
-
-            elif(movimiento):
-                actDistSenial = robot.distanciaSenial()
-
-                if((antDistSenial==None)):
-                    recompensa = self.recompensaMinima
-
-                elif((antDistSenial<actDistSenial)):
-                    recompensa = self.penalizacionMinima
-
-                elif(antDistSenial+tolerancia>actDistSenial):
-                    recompensa = self.recompensaMedia
-                
-        elif(antDistSenial!=None):
-            recompensa = self.penalizacionMedia
-
-        elif(movimiento):
-            recompensa = self.penalizacionMinima
-
-        print("|--> Recompensa: ", recompensa)
-        return recompensa
-
 
     def entrenamiento(self, robot):
         puntos_partida = []
@@ -280,7 +240,7 @@ class ActionTraining(TrainingEnvironment):
 
                 ejecucion = robot.ejecutar(accion)
 
-                estSig = robot.estadoActual_2(accion)
+                estSig = robot.estadoActual(accion)
                 ambSig = robot.get_ambienteActual()
                 siguienteAccion = robot.siguienteAccion(estSig)#estAct
                 
@@ -288,7 +248,7 @@ class ActionTraining(TrainingEnvironment):
                 actSenial = robot.get_receiver()
                 print("Estado Siguiente: ", estSig,". Acción: ",siguienteAccion)
                 
-                recompensa = self.determinarRecompensa2(robot,ejecucion,ambAct,ambSig,actSenial,antSenial,antDistSenial,angAnteriorSenial)
+                recompensa = self.determinarRecompensa(robot,ejecucion,ambAct,ambSig,actSenial,antSenial,antDistSenial,angAnteriorSenial)
                 
                 robot.actualizarPoliticas(estAct,accion,estSig,siguienteAccion,recompensa)
 
