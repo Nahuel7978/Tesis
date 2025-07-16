@@ -8,7 +8,72 @@ class BehavioralTraining(TrainingEnvironment):
         super().__init__(recompensaMaxima, recompensaMinima, valorPaso, penalizacion, epocas, pasos)
 
 
-    def determinarRecompensa(self, robot,antValPos, antDistSenial):
+    def determinarRecompensa(self, robot, antValPos, antDistSenial, antAngulo=None):
+        actValPosDer = round(robot.get_frontRightPositionSensor(), 1)
+        actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1)
+        senal = robot.get_receiver()
+        recompensa = 0
+        
+        # Verificar movimiento
+        movimiento = not ((antValPos[0] + self.toleranciaMovimiento > actValPosIzq) and 
+                        (antValPos[1] + self.toleranciaMovimiento > actValPosDer))
+        
+        if not movimiento:
+            print("|-> Recompensa: ",self.penalizacionMaxima)
+            return self.penalizacionMaxima
+        
+        if senal > 0:
+            tolerancia = 0.3
+            
+            # RECOMPENSA MÁXIMA: Meta alcanzada
+            if robot.estimuloEncontrado(tolerancia):
+                print("|-> Recompensa: ",self.recompensaMaxima)
+                return self.recompensaMaxima
+            
+            # Datos actuales
+            actDistSenial = robot.distanciaSenial()
+            actAngulo = robot.anguloUltimaSenial()  # Tu método
+            
+            # 1. Recompensa por acercarse
+            if antDistSenial is not None:
+                delta_distancia = antDistSenial - actDistSenial
+                if delta_distancia > 0:  # Se acercó
+                    recompensa += self.recompensaMinima * (1 + delta_distancia)
+                else:  # Se alejó
+                    recompensa += self.penalizacionMinima * (1 - delta_distancia)
+            
+            # 2. Recompensa por orientación correcta
+            orientacion_robot = robot.get_orientacion_robot()  # Método que implementarás
+            
+            # Diferencia entre orientación del robot y dirección hacia la señal
+            diferencia_angular = abs(orientacion_robot - actAngulo)
+            
+            # Normalizar a [0, π]
+            if diferencia_angular > math.pi:
+                diferencia_angular = 2 * math.pi - diferencia_angular
+            
+            # Recompensa por buena orientación
+            if diferencia_angular < math.pi / 6:  # < 30°
+                recompensa += 0.2
+            elif diferencia_angular < math.pi / 3:  # < 60°
+                recompensa += 0.1
+            else:  # > 60°
+                recompensa -= 0.1
+            
+            # 3. Recompensa por mejorar orientación
+            if antAngulo is not None:
+                # Si el ángulo hacia la señal cambió favorablemente
+                delta_orientacion = abs(antAngulo - actAngulo)
+                if delta_orientacion < 0.1:  # Se mantiene bien orientado
+                    recompensa += 0.05
+        
+        else:
+            recompensa = self.penalizacionMinima *0.5
+        
+        print("|--> Recompensa: ", recompensa)
+        return recompensa
+
+    def determinarRecompensa2(self, robot,antValPos, antDistSenial):
         actValPosDer = round(robot.get_frontRightPositionSensor(), 1)
         actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1)
         senal = robot.get_receiver()
@@ -58,8 +123,11 @@ class BehavioralTraining(TrainingEnvironment):
             actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1) 
             
             antDistSenial = None
+            antAngulo = None
+
             if(robot.haySenial()):
                 actDistSenial = robot.distanciaSenial()
+                antAngulo = robot.anguloUltimaSenial()
             else:
                 actDistSenial = None
 
@@ -82,11 +150,11 @@ class BehavioralTraining(TrainingEnvironment):
                 robot.ejecutar(accion)
 
                 estSig = robot.estadoActual()
-                siguienteAccion = robot.siguienteAccion(estAct)
+                siguienteAccion = robot.siguienteAccion(estSig)
 
                 print("Estado Siguiente: ", estAct,". Acción: ",siguienteAccion)
 
-                recompensa = self.determinarRecompensa(robot,antValPos,antDistSenial)
+                recompensa = self.determinarRecompensa(robot,antValPos,antDistSenial,antAngulo)
                 
                 robot.actualizarPoliticas(estAct,accion,estSig,siguienteAccion,recompensa)
 
@@ -95,8 +163,10 @@ class BehavioralTraining(TrainingEnvironment):
 
                 if(robot.haySenial()):
                     actDistSenial = robot.distanciaSenial()
+                    antAngulo = robot.anguloUltimaSenial()
                 else:
                     actDistSenial = None
+                    antAngulo = None
 
                 j += 1
                 if(recompensa == self.recompensaMaxima):
