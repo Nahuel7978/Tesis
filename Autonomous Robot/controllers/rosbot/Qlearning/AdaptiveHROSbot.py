@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-class AdaptiveHROSbot(BehavioralHROSbot, ABC):
+class AdaptiveHROSbot(HROSbot, ABC):
     """
         Representa al robot husuario robot con capacidades de adaptación y decisión de acción.
 
@@ -46,11 +46,11 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
     #-----
     @abstractmethod
-    def estadoActual(self):
+    def estadoActual(self, acc=None):
         """
             Devuelve la posicion del estado actual en la tabla de politicas.
         """
-
+        pass
     #-----
     @abstractmethod
     def guardarPoliticas(self):
@@ -173,7 +173,7 @@ class AdaptiveHROSbot(BehavioralHROSbot, ABC):
 
             Utiliza los métodos estadoActual() y en base a su retorno determina la acción llamando al método siguiente Accion(). Por último ejecuta el comportamiento pertinente.
         """
-        estAct = self.estadoActual_2(acc)
+        estAct = self.estadoActual(acc)
         sigAcc = self.siguienteAccion(estAct)
         self.ejecutar(sigAcc)
         return sigAcc
