@@ -35,7 +35,7 @@ class BehavioralHROSbot(HROSbot):
         """
         self.robot.step(self.robotTimestep)
         print("-----> Ir_estimulo")
-        velocidad = self.speed
+        velocidad = self.speedMax
         finaliza = False
         giro = False
 
@@ -43,6 +43,7 @@ class BehavioralHROSbot(HROSbot):
         print("giro: ",giro)
         if(giro):
             finaliza = self.avanzarSenial()
+            
         self.vaciarCola()
             
         return finaliza
@@ -57,11 +58,12 @@ class BehavioralHROSbot(HROSbot):
         self.robot.step(self.robotTimestep)
         self.vaciarCola()
         print("--> Evitar Obstaculo")
-        obstaculo =  self.getObstaculoAlFrente()
+        obstaculo =  self.getObstaculoAlFrente(0.3)
         giro = False
         finaliza = False
 
-        if(obstaculo != None):
+        if((obstaculo != None)or((self.get_frontLeftSensor()<self.minDistancia)or(self.get_frontRightSensor()<self.minDistancia))):
+            self.retroceder(0.05,2)
             
             if(self.get_ultimaSenial()!=None):
                 giro = self.giroParaleloObstaculoGuiado()
@@ -88,7 +90,7 @@ class BehavioralHROSbot(HROSbot):
         print("--> Explorar")
         self.robot.step(self.robotTimestep)
         self.vaciarCola()
-        velocidad = self.speed
+        velocidad = self.speedMax
         distancia = 1
 
         ##if (not self.haySenial()):
@@ -97,7 +99,7 @@ class BehavioralHROSbot(HROSbot):
         giro = False
         avance = False
 
-        if((probMov<=0.40)):
+        if((probMov<=0.7)):
             gDeterminado = self.orientacionUltimaSenial()
             i = 0
             while((not giro)and(i<=1)):
@@ -114,11 +116,11 @@ class BehavioralHROSbot(HROSbot):
 
                     if(not giro):
                         gDeterminado = 1
-            if(giro):
-                avance = self.avanzar(distancia,velocidad)
                            
-        else:
-            avance = self.avanzar(distancia,velocidad) 
+        if(probMov<=0.3):
+            distancia=2
+
+        avance = self.avanzar(distancia,velocidad) 
         
         self.exploracion=False
 
