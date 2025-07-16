@@ -2,10 +2,10 @@
 from abc import ABC, abstractmethod
 from Qlearning.AdaptiveHROSbot import *
 
-class BehavioralAdaptativeHROSbot(AdaptiveHROSbot):
+class BehavioralAdaptativeHROSbot(AdaptiveHROSbot, BehavioralHROSbot):
 
     def __init__(self, bot, l_rate, t_descuento, r_exploracion):
-        super().__init__(bot, l_rate, t_descuento, r_exploracion)
+        AdaptiveHROSbot.__init__(self, bot, l_rate, t_descuento, r_exploracion)
         self.putCantidadAcciones(3)
         self.putCantidadEstados(13)
         self.inicializarPoliticas()
@@ -34,7 +34,7 @@ class BehavioralAdaptativeHROSbot(AdaptiveHROSbot):
             raise ValueError(f"Acción no válida: {accion}")
 
 
-    def estadoActual(self):
+    def estadoActual(self, acc=None):
         indice = 0
         distacia = 3
         self.robot.step(self.robotTimestep)
@@ -94,14 +94,14 @@ class BehavioralAdaptativeHROSbot(AdaptiveHROSbot):
         """
             Almacena la tabla de politicas en un archivo .txt.
         """
-        np.savetxt('politicas.txt', self.qLearning, fmt='%.5f')
+        np.savetxt('politicas2.txt', self.qLearning, fmt='%.5f')
 
     def cargarPoliticas(self):
         """
             Carga las politicas almacenadas en un archivo .txt.
         """
         try:
-            self.qLearning = np.loadtxt('politicas.txt')
+            self.qLearning = np.loadtxt('politicas2.txt')
         except FileNotFoundError:
             print("Error: El archivo  no existe.")
         except Exception as e:
