@@ -73,36 +73,6 @@ class BehavioralTraining(TrainingEnvironment):
         print("|--> Recompensa: ", recompensa)
         return recompensa
 
-    def determinarRecompensa2(self, robot,antValPos, antDistSenial):
-        actValPosDer = round(robot.get_frontRightPositionSensor(), 1)
-        actValPosIzq = round(robot.get_frontLeftPositionSensor(), 1)
-        senal = robot.get_receiver()
-        recompensa =  0
-        movimiento = False
-
-        if((antValPos[0]+self.toleranciaMovimiento>actValPosIzq) and
-           (antValPos[1]+self.toleranciaMovimiento>actValPosDer)):
-             recompensa = self.penalizacionMaxima
-        else:
-            movimiento=True
-
-        if(senal>0):
-            tolerancia = 0.3 
-            if(robot.estimuloEncontrado(tolerancia)):
-                recompensa = self.recompensaMaxima
-            elif(movimiento):
-                actDistSenial = robot.distanciaSenial()
-                if((antDistSenial==None)or(antDistSenial>actDistSenial)):
-                    recompensa = self.recompensaMinima
-                else:
-                    recompensa = self.penalizacionMinima        
-        
-        elif(movimiento):
-            recompensa = self.penalizacionMinima
-
-        print("|--> Recompensa: ", recompensa)
-        return recompensa
-
 
     def entrenamiento(self, robot):
         puntos_partida = []
