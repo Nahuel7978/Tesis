@@ -852,7 +852,6 @@ Robot {
     DEF EPUCK_EMITTER Emitter {
       channel IS emitter_channel
     }
-    
     Emitter {
       name "Emitter"
       channel 1

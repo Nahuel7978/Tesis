@@ -7,15 +7,15 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/BrushedAluminium.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/apartment_structure/protos/Wall.proto"
 EXTERNPROTO "../protos/Rosbot.proto"
-EXTERNPROTO "../protos/Elisa3.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/factory/containers/protos/WoodenBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/Roughcast.proto"
+EXTERNPROTO "../protos/Elisa3.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.10233616861316903 -0.9876313786920657 0.11879212270342822 5.443257091291039
-  position -7.393996480015443 -0.16977435364074656 5.162035368894568
+  orientation 0.012190775031972061 0.9992640725440814 0.036368919790622296 0.8184417842344077
+  position -14.372372359134136 -0.41498699112420534 15.154592021496263
 }
 TexturedBackground {
 }
@@ -35,7 +35,21 @@ RectangleArena {
   }
 }
 WoodenBox {
+  translation 1.93087 -3.00664 0.29
+  rotation 0 0 1 2.85387e-06
+  name "wooden box(4)"
+  size 0.6 2 0.6
+}
+WoodenBox {
   translation 3.83 1.76 0.3
+}
+WoodenBox {
+  translation 0.96 0.93 0.3
+  name "wooden box(5)"
+}
+WoodenBox {
+  translation -2.63 2.48 0.3
+  name "wooden box(6)"
 }
 WoodenBox {
   translation 3.76 0 0
@@ -53,28 +67,10 @@ WoodenBox {
   name "wooden box(2)"
   size 0.6 2 0.6
 }
-Elisa3 {
-  translation 3.755849102848523 -4.8446272146499176e-08 0.1599875831994315
-  rotation 1.0149007531352983e-05 -0.9999999999453186 2.5219758203427143e-06 0.03657113875850826
-  controller "elisa3"
-  extensionSlot [
-    Emitter {
-      translation -0.01 0 0.027
-      name "emitter(1)"
-      rotationStep 0.261799
-      range 100
-      maxRange 100
-      aperture 0
-      channel 1
-      baudRate 9200
-      bufferSize 1
-    }
-  ]
-}
 DEF principal_robot Rosbot {
-  translation -3.26663 0.32349 -0.000554887
-  rotation -7.249289971856665e-05 -5.0092099805531475e-05 0.9999999961177806 -0.3627453071795861
-  controller "rosbot"
+  translation -2.60455 0.868563 -0.000527136
+  rotation 1.596179999316671e-05 2.452399998950121e-05 -0.9999999995718973 1.14856
+  controller "robotController"
   controllerArgs [
     ""
   ]
@@ -88,4 +84,30 @@ Wall {
       scale 2.4 1
     }
   }
+}
+DEF Supervisor Robot {
+  children [
+    Receiver {
+      channel 2
+      allowedChannels [
+        2
+      ]
+    }
+    Emitter {
+      channel 2
+      allowedChannels [
+        2
+      ]
+    }
+  ]
+  name "Supervisor"
+  controller "robotEnviroment"
+  controllerArgs [
+    ""
+  ]
+  supervisor TRUE
+}
+Elisa3 {
+  translation 3.74 0 0.16
+  controller "elisa3"
 }

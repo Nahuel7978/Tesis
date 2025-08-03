@@ -676,6 +676,15 @@ PROTO Rosbot [
         channel 1
         aperture 0
       }
+      
+      Receiver {
+        name "TrainingReceiver"
+        channel 2
+      }
+      Emitter {
+        name "TrainingEmitter"
+        channel 2
+      }
     ]
     name IS name
     boundingObject Group {
