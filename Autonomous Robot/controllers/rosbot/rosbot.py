@@ -10,6 +10,7 @@ from Qlearning.ActionAdaptativeHROSbot import *
 from Qlearning.BehavioralAdaptativeHROSbot import * 
 from Training.ActionTraining import *
 from Training.BehavioralTraining import *
+
 import numpy as np
 import math
 import time
@@ -23,7 +24,7 @@ timestep = int(robot.getBasicTimeStep()) # timestep = 32
 rosbot = BehavioralAdaptativeHROSbot(robot,0.1,0.7,0.2)
 rosbot_action = ActionAdaptativeHROSbot(robot,0.1,0.7,0.2)
 
-entorno = BehavioralTraining(5,2,1,-5,20,20)
+entorno = BehavioralTraining(5,2,1,-5,50,20)
 entorno_acciones = ActionTraining(5,3,1,-1,-3,-5,50,35)
 
 rosbotComp = BehavioralHROSbot(robot)
@@ -95,14 +96,16 @@ while((robot.step(timestep) != -1)and(not llegue)):
 """
 #""" 
 #BEHAVIOR ADAPTATIVE
-rosbot.cargarPoliticas()
-rosbot.visualizarPoliticas()
+#rosbot.cargarPoliticas()
+#rosbot.visualizarPoliticas()
 
+    # Entrenamiento del entorno
+entorno.entrenamiento(rosbot)    
 
-#entorno.entrenamiento(rosbot)    
+    
 #entorno.visualizarRegistroEntrenamiento()
 #rosbot.visualizarPoliticas()
-#"""
+"""
 print("--------------")
 print("MODELO ENTRENADO")
 print("--------------")
