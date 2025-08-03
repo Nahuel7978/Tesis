@@ -3,9 +3,9 @@ from controller import Robot, Camera, Motor, Receiver
 from Navegacion.MapaNavegacion import *
 import numpy as np
 from itertools import combinations
-from sklearn.linear_model import RANSACRegressor
+
 import warnings
-from sklearn.exceptions import UndefinedMetricWarning
+
 
 class HROSbot: 
     """
@@ -1209,8 +1209,9 @@ class HROSbot:
         obstaculo, min = self.getObstaculo(lidar_left,extra)
         return obstaculo, min
 
+    """
     def getEsquinaFrontal(self):
-        """
+        
             Detecta si el robot se encuentra frente a una esquina utilizando los datos del sensor LIDAR
             y un análisis geométrico basado en RANSAC para detectar líneas en el espacio cartesiano.
 
@@ -1226,9 +1227,9 @@ class HROSbot:
                 - Utiliza `sklearn.linear_model.RANSACRegressor`, por lo que se debe tener instalado `scikit-learn`.
                 - En caso de no contar con `scikit-learn`, el método recurre a una técnica alternativa basada en 
                 detección de discontinuidades en las lecturas LIDAR.
-        """
+        
         def extract_line_segments(x, y, min_samples=12, residual_threshold=0.08, max_trials=150):
-            """
+            
                 Extrae múltiples segmentos de línea del conjunto de puntos cartesianas usando el algoritmo RANSAC.
 
                 Args:
@@ -1242,7 +1243,7 @@ class HROSbot:
                     List[Tuple[np.ndarray, np.ndarray, sklearn.linear_model.base.LinearRegression]]:
                         Lista de tuplas donde cada una contiene los puntos inliers en X, Y y el modelo ajustado.
                         Puede retornar una lista vacía si no se detectan líneas confiables.
-            """
+            
             
             if len(x) < min_samples:
                 return []
@@ -1362,7 +1363,7 @@ class HROSbot:
                 return np.min(lidar_data) < 0.75
         
         return False
-
+        """
     def detectarParedDerecha(self, distancia_max=2.0, tolerancia_continuidad=0.1):
         """
         Detecta si hay una pared a la izquierda del robot y calcula su longitud.
