@@ -1,14 +1,14 @@
 import math
 from controller import Robot, Camera, Motor, Receiver, Supervisor
 import numpy as np
-from deepbots.robots.controllers.csv_robot import CSVRobot
+from deepbots.supervisor.controllers.robot_supervisor_env import RobotSupervisorEnv
 from gym.spaces import Box,Discrete
 
-class RobotController(CSVRobot): 
+class RobotController(RobotSupervisorEnv): 
     """
     Representa al robot Husuarion Rosbot.
     """
-    def __init__(self):
+    def __init__(self,obs_space=0, act_space=0, name="principal_robot"):
         """
            Inicializa un objeto de tipo HROSbot.
 
@@ -17,11 +17,19 @@ class RobotController(CSVRobot):
 
         #---Inicialización.
         
-        super().__init__("TrainingEmitter","TrainingReceiver")
+        super().__init__()
 
         self.robotTimestep = self.timestep
+        self.robot_node = self.getFromDef(name)
+        if self.robot_node is None:
+            raise RuntimeError("No se encontró el robot con DEF=",name)
         
-        
+        #--- Parametros de entrenamiento
+        self.observation_space = Box(low=-np.inf, high=np.inf, shape=(obs_space,), dtype=np.float32)
+        self.action_space = Discrete(act_space)
+        self.obs_space = obs_space
+        self.act_space= act_space
+
         #---Atributos.
         self.speedMax = 8
         self.speed = 5
@@ -111,43 +119,22 @@ class RobotController(CSVRobot):
         self.penalizacion_maxima = -5
         self.penalizacion_minima = 1
         self.tolerancia_movimiento = 1
+
+        #--- Parámetros de reseteo.
+        self.translation = self.robot_node.getField("translation")
+        self.rotation = self.robot_node.getField("rotation")
+        self.startPoints = []
+        self.startRotation = []
+        self.startPoints.append(self.currentLocation())
+        self.startRotation.append(self.currentRotation())
         
+        #---
         self.detener()
         self.DefaultPositionSensorAnterior()
+
 #-----Deepbots-----
-    def handle_receiver(self):
-        """
-        This receiver uses the basic Webots receiver-handling code. The
-        use_message_data() method should be implemented to actually use the
-        data received from the supervisor.
-        """
-        while self.receiver.getQueueLength()==0:
-            self.step(self.robotTimestep)
-        
-        # Receive and decode message from supervisor
-        try:
-            message = self.receiver.getString()
-        except AttributeError:
-            message = self.receiver.getData().decode("utf-8")
-        # Convert string message into a list
-        message = message.split(",")
 
-        self.use_message_data(message)
-
-        while self.receiver.getQueueLength() > 0:
-            # Clear the receiver queue
-            self.receiver.nextPacket()
-
-    def create_message(self):
-        message = self.observations() + [self.reward(),self.done()]
-        return message
-    
-    def use_message_data(self, message):
-        action = int(message[0])  # Convert the string message into an action integer
-        self.apply_action(action)
-        
-
-    def observations(self):
+    def get_observations(self):
         lidar_data = np.array(self.lidar.getRangeImage())
         lidar_data[np.isinf(lidar_data)] = 10
         signal_strength = 0.0
@@ -157,12 +144,16 @@ class RobotController(CSVRobot):
             signal_strength = self.getSignalStrength()
             distance = self.distanciaSenial()
             angle = self.anguloUltimaSenial()
-            
-        
+            if not self.is_done():
+                self.startPoints.append(self.currentLocation())
+                self.startRotation.append(self.currentRotation())
         observations = lidar_data.tolist() + [signal_strength,distance,angle]
-        return observations
-    
-    def reward(self):
+        return np.array(observations, dtype=np.float32)
+
+    def get_default_observation(self):
+        return np.zeros(self.obs_space, dtype=np.float32)
+
+    def get_reward(self,action):
         act_val_pos_der = round(self.frontRightPositionSensor.getValue(), 1)
         act_val_pos_izq = round(self.frontLeftPositionSensor.getValue(), 1)
         senal = self.haySenial()
@@ -172,7 +163,7 @@ class RobotController(CSVRobot):
         movimiento = not ((self.ant_val_pos[0] + self.tolerancia_movimiento > act_val_pos_izq) and 
                          (self.ant_val_pos[1] + self.tolerancia_movimiento > act_val_pos_der))
         if not movimiento:
-            ##print("|-> Recompensa (sin movimiento): ", self.penalizacion_maxima)
+            print("|-> Recompensa (sin movimiento): ", self.penalizacion_maxima)
             self.ant_val_pos[0] = act_val_pos_izq
             self.ant_val_pos[1] = act_val_pos_der
             return self.penalizacion_maxima
@@ -183,7 +174,7 @@ class RobotController(CSVRobot):
             
             # RECOMPENSA MÁXIMA: Meta alcanzada
             if self.estimuloEncontrado(tolerancia):
-                ##print("|-> Recompensa (meta alcanzada): ", self.recompensa_maxima)
+                print("|-> Recompensa (meta alcanzada): ", self.recompensa_maxima)
                 self.ant_val_pos[0] = act_val_pos_izq
                 self.ant_val_pos[1] = act_val_pos_der
                 return self.recompensa_maxima
@@ -233,15 +224,20 @@ class RobotController(CSVRobot):
 
         self.ant_val_pos[0] = act_val_pos_izq
         self.ant_val_pos[1] = act_val_pos_der
-
+        print("|-> Recompensa: ", recompensa)
         return recompensa
     
-    def done(self):
+    def is_done(self):
         return self.estimuloEncontrado(0.5)
 
+    def get_info(self):
+        """
+        This method can be implemented to return any diagnostic
+        information on each step, e.g. for debugging purposes.
+        """
+        return {"done": self.is_done()}
+
     def apply_action(self, action):
-			  #Conjunto de acciones
-        # ej. 0 = avanzar, 1 = girar izq, 2 = girar der
         self.activateRobotTimestep()
 
         if(action==0):
@@ -258,6 +254,21 @@ class RobotController(CSVRobot):
         
         self.detener()
 
+    def reset(self):    
+        if(self.is_done()==True):
+            index = np.random.randint(0,len(self.startPoints))
+            self.translation.setSFVec3f(self.startPoints[index])
+            self.rotation.setSFRotation(self.startRotation[index])
+            self.done='False'
+            self.simulationResetPhysics()
+            super(Supervisor, self).step(int(self.getBasicTimeStep()))
+            return self.get_default_observation()
+
+        
+        return self.get_observations()
+
+    def render(self, mode="human"):
+        pass
 #----------
 
 #-----Comportamientos-----   
@@ -266,7 +277,7 @@ class RobotController(CSVRobot):
             Busca la señal de un Emmiter y en caso de encontrarla orienta el robot hacia la misma y avanza la distancia que hay entre él y el emisor.
 
         """
-        ##self.step(self.robotTimestep)
+        ##self.updateTimestep()
         print("-----> Ir_estimulo")
         velocidad = self.speedMax
         finaliza = False
@@ -287,7 +298,7 @@ class RobotController(CSVRobot):
             En caso de no poder hacerlo evita el obstaculo en base al angulo del obstaculo encontrado.
         """
         
-        ##self.step(self.robotTimestep)
+        ##self.updateTimestep()
         self.vaciarCola()
         print("--> Evitar Obstaculo")
         obstaculo =  self.getObstaculoAlFrente(0.3)
@@ -393,7 +404,7 @@ class RobotController(CSVRobot):
                 self.ruedaDerechaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(velocidad)
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 
                 if(dist==dist_ant):
                     p+=1
@@ -448,7 +459,7 @@ class RobotController(CSVRobot):
                 self.ruedaDerechaInferior.setVelocity(-velocidad)
                 self.ruedaIzquierdaInferior.setVelocity(-velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(-velocidad)
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 if(dist==dist_ant):
                     pasos+=1
 
@@ -502,7 +513,7 @@ class RobotController(CSVRobot):
                 self.ruedaDerechaInferior.setVelocity(0.0)
                 self.ruedaIzquierdaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaSuperior.setVelocity(velocidad)
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 frs = self.frontLeftSensor.getValue()
                 
                 if(gyroZ==ant_gyroZ):
@@ -554,7 +565,7 @@ class RobotController(CSVRobot):
                 self.ruedaDerechaInferior.setVelocity(velocidad)
                 self.ruedaIzquierdaInferior.setVelocity(0.0)
                 self.ruedaIzquierdaSuperior.setVelocity(0.0)
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 fls = self.frontRightSensor.getValue()
 
                 if(gyroZ==ant_gyroZ):
@@ -585,7 +596,7 @@ class RobotController(CSVRobot):
         self.ruedaIzquierdaInferior.setVelocity(0)
         self.ruedaIzquierdaSuperior.setVelocity(0)
 
-        self.step(self.robotTimestep)
+        self.updateTimestep()
 
         self.anteriorValorPositionSensor[0] = self.frontLeftPositionSensor.getValue()
         self.anteriorValorPositionSensor[1] = self.frontRightPositionSensor.getValue()
@@ -626,7 +637,7 @@ class RobotController(CSVRobot):
             Retorna True si el robot pudo avanzar y False en caso contrario.
         """
         #self.robot.step(self.robotTimestep)
-        self.step(self.robotTimestep)
+        self.updateTimestep()
         avance = False
 
         if (self.haySenial()):
@@ -692,7 +703,7 @@ class RobotController(CSVRobot):
                 self.ruedaIzquierdaInferior.setVelocity(self.speedMax-plus_vel)
                 self.ruedaIzquierdaSuperior.setVelocity(self.speedMax-plus_vel)
 
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 if(dist==recorrido):
                     p+=1
                 if((p == self.pasos)or(self.estimuloEncontrado(0.5))):
@@ -721,7 +732,7 @@ class RobotController(CSVRobot):
                 self.ruedaIzquierdaInferior.setVelocity(self.speedMax+plus_vel)
                 self.ruedaIzquierdaSuperior.setVelocity(self.speedMax+plus_vel)
 
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 if(dist==recorrido):
                     p+=1
 
@@ -824,7 +835,7 @@ class RobotController(CSVRobot):
         giro = False
             
         if(obstaculo!= None):
-            self.step(self.robotTimestep)
+            self.updateTimestep()
             pared_izq, long_izq = self.detectarParedIzquierda(1)
             pared_der, long_der = self.detectarParedDerecha(1)
             print("izq:",pared_izq," long:",long_izq)
@@ -884,7 +895,7 @@ class RobotController(CSVRobot):
                 self.ruedaIzquierdaSuperior.setVelocity(-1.5)
 
                 #self.robot.step(self.robotTimestep)
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 obstaculoLidar = self.getObstaculoAlFrente(0.3)
                 fls = self.get_frontLeftSensor()
                 frs = self.get_frontRightSensor()
@@ -942,7 +953,7 @@ class RobotController(CSVRobot):
                 self.ruedaIzquierdaSuperior.setVelocity(2)
 
                 #self.robot.step(self.robotTimestep)
-                self.step(self.robotTimestep)
+                self.updateTimestep()
                 obstaculoLidar = self.getObstaculoAlFrente(0.3)
                 fls = self.get_frontLeftSensor()
                 frs = self.get_frontRightSensor()
@@ -994,7 +1005,7 @@ class RobotController(CSVRobot):
             Retorna True si se concreto el giro y False en caso contrario.
         """
         #self.robot.step(self.robotTimestep)
-        #self.step(self.robotTimestep)
+        #self.updateTimestep()
         giro = False
         
         if (self.haySenial()):
@@ -1109,6 +1120,24 @@ class RobotController(CSVRobot):
         return self.rearRightPositionSensor.getValue()
 #----------
 
+#----Ubicación y Rotación------
+
+    def currentLocation(self):
+        """
+            Retorna la ubicación exácta del agente dentro del simulador.
+        """
+        return self.translation.getSFVec3f()
+
+#-----
+
+    def currentRotation(self):
+        """
+            Retorna la rotación exácta del agente dentro del simulador.
+        """
+        return self.rotation.getSFRotation()
+    
+#---------------
+
 #-----Default-----
     def Default(self):
         """
@@ -1124,7 +1153,6 @@ class RobotController(CSVRobot):
         self.DefaultPositionSensorAnterior()
         
         
-
 #-----Valor anterior de sensor de posicion-----
     def get_anteriorValorPositionSensor(self):
         return self.anteriorValorPositionSensor
@@ -1255,7 +1283,7 @@ class RobotController(CSVRobot):
         """
             Retorna True si el número de paquetes de datos que hay en la cola del receiver es mayor a cero.
         """
-        self.step(self.robotTimestep)
+        self.updateTimestep()
         #self.robot.step(self.robotTimestep)
         
         return self.get_receiver() > 0
@@ -1302,7 +1330,7 @@ class RobotController(CSVRobot):
         Actualiza el atributo 'ultimaSenial' y 'distanciaUltimaSenial'almacenando la dirección y la distancia ultima señal encontrada respectivamente.
         """
         #self.robot.step(self.robotTimestep)
-        self.step(self.robotTimestep)
+        self.updateTimestep()
         if(self.haySenial()):
             self.set_ultimaSenial(self.getEmitterDirection()) 
             self.set_distanciaUltimaSenial(self.distanciaSenial())
@@ -1327,7 +1355,7 @@ class RobotController(CSVRobot):
             
         """
         #self.robot.step(self.robotTimestep)
-        self.step(self.robotTimestep)
+        self.updateTimestep()
         self.actualizarSenial() 
         direccion = self.get_ultimaSenial()
         giro = 3
@@ -1667,11 +1695,20 @@ class RobotController(CSVRobot):
 #----------
 
 #----- Actualizar paso ----
+    def updateTimestep(self):
+        """
+        Actualiza el tiempo de paso del robot.
+        
+        Returns:
+            int: El tiempo de paso del robot.
+        """
+        super(Supervisor, self).step(self.robotTimestep)
+
     def activateRobotTimestep(self):
         """_summary_
         """
         for i in range(0,2):
-            self.step(self.robotTimestep)
+            self.updateTimestep()
 
 #----- Atributos de la clase----
     def getRobotTimestep(self):
@@ -1683,5 +1720,3 @@ class RobotController(CSVRobot):
         return self.robotTimestep
     
 #--------------------
-robot_controller = RobotController()
-robot_controller.run()
