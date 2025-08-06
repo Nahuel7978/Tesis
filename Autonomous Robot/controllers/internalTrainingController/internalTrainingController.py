@@ -15,7 +15,7 @@ import os
 controllers_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..')
 sys.path.append(controllers_path)
 
-from controllers.rosbotController.rosbotController import RosbotController
+from controllers.robotController.robotController import RobotController
 
 def trainAgent(env):
    # wrapped_env = Wrapper(env, timeout_seconds=10)
@@ -65,6 +65,6 @@ def trainAgent(env):
 
 #------------
 
-env = RosbotController(obs_space=403, act_space=3)
+env = RobotController(obs_space=403, act_space=3)
 trainAgent(env)
 #check_env(env, warn=True)
