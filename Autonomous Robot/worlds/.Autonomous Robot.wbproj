@@ -5,7 +5,7 @@ sceneTreePerspectives: 000000ff00000001000000030000001c0000013b000000fa010000000
 maximizedDockId: -1
 centralWidgetVisible: 1
 orthographicViewHeight: 1
-textFiles: 5 "controllers/robotController/robotController.py" "controllers/elisa3/elisa3.c" "controllers/robotEnviroment/robotEnviroment.py" "controllers/rosbot/rosbot.py" "enviroment/lib/python3.10/site-packages/deepbots/supervisor/controllers/robot_supervisor_env.py" "controllers/internalTrainingController/internalTrainingController.py"
+textFiles: 0 "controllers/robotController/robotController.py" "controllers/elisa3/elisa3.c" "controllers/rosbot/rosbot.py" "enviroment/lib/python3.10/site-packages/deepbots/supervisor/controllers/robot_supervisor_env.py" "controllers/internalTrainingController/internalTrainingController.py"
 consoles: Console:All:All
 consoles: Console:All:All
 renderingDevicePerspectives: rosbot:camera depth;0;0.140625;0;0
