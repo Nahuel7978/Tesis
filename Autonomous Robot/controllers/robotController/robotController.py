@@ -8,7 +8,7 @@ class RobotController(RobotSupervisorEnv):
     """
     Representa al robot Husuarion Rosbot.
     """
-    def __init__(self,obs_space=0, act_space=0, name="principal_robot"):
+    def __init__(self,obs_space=0, act_space=0):
         """
            Inicializa un objeto de tipo HROSbot.
 
@@ -18,11 +18,6 @@ class RobotController(RobotSupervisorEnv):
         #---Inicialización.
         
         super().__init__()
-
-        self.robotTimestep = self.timestep
-        self.robot_node = self.getFromDef(name)
-        if self.robot_node is None:
-            raise RuntimeError("No se encontró el robot con DEF=",name)
         
         #--- Parametros de entrenamiento
         self.observation_space = Box(low=-np.inf, high=np.inf, shape=(obs_space,), dtype=np.float32)
@@ -45,6 +40,9 @@ class RobotController(RobotSupervisorEnv):
         self.ant_dist_senial = None
         self.ant_angulo = None
         
+        #---Robot timestep.
+        self.robotTimestep = self.timestep
+
         #---Activación de moteres.
         self.ruedaDerechaSuperior = self.getDevice("fr_wheel_joint")
         self.ruedaDerechaInferior = self.getDevice("rr_wheel_joint")
@@ -121,6 +119,10 @@ class RobotController(RobotSupervisorEnv):
         self.tolerancia_movimiento = 1
 
         #--- Parámetros de reseteo.
+        name="principal_robot"
+        self.robot_node = self.getFromDef(name)
+        if self.robot_node is None:
+            raise RuntimeError("No se encontró el robot con DEF=",name)
         self.translation = self.robot_node.getField("translation")
         self.rotation = self.robot_node.getField("rotation")
         self.startPoints = []
@@ -130,7 +132,7 @@ class RobotController(RobotSupervisorEnv):
         
         #---
         self.detener()
-        self.DefaultPositionSensorAnterior()
+        self.defaultPositionSensorAnterior()
 
 #-----Deepbots-----
 
@@ -246,8 +248,6 @@ class RobotController(RobotSupervisorEnv):
             self.evitarObstaculo()
         elif(action==2):
             self.explorar()
-        elif(action==3):
-            self.Default()
         else: 
             raise ValueError(f"Acción no válida: {action}")
         
@@ -260,6 +260,7 @@ class RobotController(RobotSupervisorEnv):
             self.translation.setSFVec3f(self.startPoints[index])
             self.rotation.setSFRotation(self.startRotation[index])
             self.done='False'
+            self.default()
             self.simulationResetPhysics()
             super(Supervisor, self).step(int(self.getBasicTimeStep()))
             return self.get_default_observation()
@@ -1139,7 +1140,7 @@ class RobotController(RobotSupervisorEnv):
 #---------------
 
 #-----Default-----
-    def Default(self):
+    def default(self):
         """
         Inicializa los valores de los sensores de posición a cero.
         """
@@ -1150,14 +1151,14 @@ class RobotController(RobotSupervisorEnv):
         self.ant_angulo = None
         
         self.detener()
-        self.DefaultPositionSensorAnterior()
+        self.defaultPositionSensorAnterior()
         
         
 #-----Valor anterior de sensor de posicion-----
     def get_anteriorValorPositionSensor(self):
         return self.anteriorValorPositionSensor
 
-    def DefaultPositionSensorAnterior(self):
+    def defaultPositionSensorAnterior(self):
         self.anteriorValorPositionSensor = [0,0,0,0]
 #----------
 
