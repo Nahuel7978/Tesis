@@ -85,28 +85,6 @@ Wall {
     }
   }
 }
-DEF Supervisor Robot {
-  children [
-    Receiver {
-      channel 2
-      allowedChannels [
-        2
-      ]
-    }
-    Emitter {
-      channel 2
-      allowedChannels [
-        2
-      ]
-    }
-  ]
-  name "Supervisor"
-  controller "robotEnviroment"
-  controllerArgs [
-    ""
-  ]
-  supervisor TRUE
-}
 Elisa3 {
   translation 3.74 0 0.16
   controller "elisa3"
