@@ -57,14 +57,15 @@ def trainAgent(env):
     except Exception as e:
         print(f"Error al crear el modelo: {e}")
         env.close()
-        return None
+        sys.exit(0)
     
     finally:
         env.close()
+        sys.exit(0)
     
 
 #------------
-
+print("Entrenando agente...")
 env = RobotController(obs_space=403, act_space=3)
 trainAgent(env)
 #check_env(env, warn=True)
