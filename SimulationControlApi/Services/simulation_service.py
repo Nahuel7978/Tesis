@@ -75,11 +75,11 @@ class SimulationService:
     def set_job_directory(self):
          id = self.get_next_job_id()
          job = "job_"+str(id)
-         return self.world_service.setup_job_workspace(job),id
+         return self.world_service.setup_job_workspace(job),job
 
-    def start_job(self, job, zip_path):
+    def start_job(self, job:str, zip_path:Path):
         extracted_path = self.world_service.extract_world_archive(zip_path, job)
         name,controller,env_class = self.world_service.get_robot(job)
-        wbt = self.world_service.validate_world(name,extracted_path)
+        wbt = self.world_service.validate_world(name,Path(extracted_path))
         self.world_service.patch_world_controllers(name,wbt)
         
