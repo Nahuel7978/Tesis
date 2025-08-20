@@ -1,0 +1,85 @@
+import os
+import re
+from pathlib import Path
+import logging
+from Services.world_service import WorldService
+
+logger = logging.getLogger(__name__)
+
+class SimulationService:
+    def __init__(self):
+        self.image_name = "webots_image:lasted"  # Nombre de tu imagen
+        self.storage_path = Path("Storage/Jobs")
+        self._current_max_id = None
+        self._initialize_max_id()
+        self.world_service = WorldService()
+        
+        
+    def _initialize_max_id(self) -> None:
+            """
+            Inicializa el ID máximo analizando las carpetas existentes en Storage/Jobs.
+            Se ejecuta al levantar el servicio.
+            """
+            try:
+                self._current_max_id = self._get_max_job_id()
+                logger.info(f"ID máximo inicializado: {self._current_max_id}")
+            except Exception as e:
+                logger.error(f"Error al inicializar el ID máximo: {e}")
+                self._current_max_id = 0
+        
+    def _get_max_job_id(self) -> int:
+            """
+            Analiza las carpetas en Storage/Jobs y retorna el ID más grande encontrado.
+            Si no hay carpetas, retorna 0.
+            
+            Returns:
+                int: El ID más grande encontrado, o 0 si no hay carpetas
+            """
+            # Crear el directorio si no existe
+            self.storage_path.mkdir(parents=True, exist_ok=True)
+            
+            max_id = 0
+            job_pattern = re.compile(r'^job_(\d+)$')
+            
+            try:
+                # Listar todas las carpetas en Storage/Jobs
+                for item in self.storage_path.iterdir():
+                    if item.is_dir():
+                        match = job_pattern.match(item.name)
+                        if match:
+                            job_id = int(match.group(1))
+                            max_id = max(max_id, job_id)
+                            logger.debug(f"Carpeta encontrada: {item.name}, ID: {job_id}")
+                
+                logger.info(f"ID máximo encontrado en carpetas existentes: {max_id}")
+                return max_id
+                
+            except Exception as e:
+                logger.error(f"Error al analizar carpetas de jobs: {e}")
+                return 0
+            
+    def get_next_job_id(self) -> int:
+        """
+        Obtiene el siguiente ID único para un nuevo job.
+        
+        Returns:
+            int: El siguiente ID disponible
+        """
+        if self._current_max_id is None:
+            self._initialize_max_id()
+        
+        self._current_max_id += 1
+        logger.info(f"Generando nuevo job ID: {self._current_max_id}")
+        return self._current_max_id
+    
+    def set_job_directory(self):
+         id = self.get_next_job_id()
+         job = "job_"+str(id)
+         return self.world_service.setup_job_workspace(job),id
+
+    def start_job(self, job, zip_path):
+        extracted_path = self.world_service.extract_world_archive(zip_path, job)
+        name,controller,env_class = self.world_service.get_robot(job)
+        wbt = self.world_service.validate_world(name,extracted_path)
+        self.world_service.patch_world_controllers(name,wbt)
+        
