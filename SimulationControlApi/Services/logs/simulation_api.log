@@ -1,0 +1,89 @@
+2025-08-19 10:37:53,044 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:39:43,557 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:40:31,203 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:40:31,204 - __main__ - [31mERROR[0m - Error creando workspace para job job_123: 'parents' is an invalid keyword argument for mkdir()
+2025-08-19 10:41:13,924 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:41:13,925 - __main__ - [31mERROR[0m - Error creando workspace para job job_123: 'exist_ok' is an invalid keyword argument for mkdir()
+2025-08-19 10:41:48,271 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:41:48,272 - __main__ - [32mINFO[0m - Workspace creado para job job_123 en Storage/job_123
+2025-08-19 10:42:47,328 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:42:47,329 - __main__ - [32mINFO[0m - Workspace creado para job job_123 en ../Storage/job_123
+2025-08-19 10:44:16,050 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:44:16,051 - __main__ - [32mINFO[0m - Workspace creado para job job_123 en ../Storage/job_123
+2025-08-19 10:44:21,482 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 10:44:21,483 - __main__ - [31mERROR[0m - Error creando workspace para job job_123: [Errno 17] File exists: '../Storage/job_123/world'
+2025-08-19 11:06:03,914 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 11:06:04,056 - __main__ - [32mINFO[0m - Mundo extraído para job job_123 en ../Storage/job_123/world
+2025-08-19 11:06:43,811 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 11:06:43,832 - __main__ - [32mINFO[0m - Mundo extraído para job job_123 en ../Storage/job_123/world
+2025-08-19 11:46:12,852 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 11:46:12,895 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún archivo .wbt en el mundo
+2025-08-19 11:50:35,803 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 11:50:35,805 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 11:51:17,783 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 11:51:17,785 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 12:08:56,969 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 12:08:56,975 - __main__ - [33mWARNING[0m - Error buscando el robot '/home/roman7978/Documentos/university_portfolio/Tesis/SimulationControlApi/Storage/job_123/world/Autonomous Robot/worlds/Autonomous Robot.wbt' en principal_robot: [Errno 2] No such file or directory: 'principal_robot'
+2025-08-19 12:08:56,976 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 12:10:07,823 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 12:10:07,825 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 12:11:56,600 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 12:11:56,602 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'principal_robot', ' en el archivo .wbt')
+2025-08-19 12:13:14,113 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 12:13:14,115 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'principal_robot', ' en el archivo .wbt')
+2025-08-19 12:15:14,448 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 12:15:14,450 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'Elisa3', ' en el archivo .wbt')
+2025-08-19 12:15:31,994 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 12:15:31,997 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'Elisa3', ' en el archivo .wbt')
+2025-08-19 13:57:10,690 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 13:57:10,763 - __main__ - [32mINFO[0m - El robot 'principal_robot' fue encontrado en el archivo.
+2025-08-19 13:57:10,764 - __main__ - [32mINFO[0m - Mundo validado correctamente: Autonomous Robot.wbt, robots encontrados: True
+2025-08-19 13:57:34,027 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 13:57:34,031 - __main__ - [32mINFO[0m - El robot 'Elisa3' fue encontrado en el archivo.
+2025-08-19 13:57:34,031 - __main__ - [32mINFO[0m - Mundo validado correctamente: Autonomous Robot.wbt, robots encontrados: True
+2025-08-19 14:25:49,053 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:25:49,107 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: [Errno 2] No such file or directory: '/home/roman7978/Documentos/university_portfolio/Tesis/SimulationControlApi/Storage/job_123/world/Autonomous Robot/Autonomous Robot.wbt'
+2025-08-19 14:26:18,080 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:26:18,101 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:28:11,416 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:28:11,418 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:33:16,889 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:33:16,890 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:33:39,198 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:33:39,200 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:33:56,389 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:33:56,391 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:36:22,134 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:36:22,136 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:36:43,897 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:36:43,899 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:37:23,981 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:37:23,982 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-19 14:42:41,214 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:42:41,256 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: compile() takes from 1 to 2 positional arguments but 3 were given
+2025-08-19 14:45:41,025 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:45:41,026 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: compile() takes from 1 to 2 positional arguments but 3 were given
+2025-08-19 14:46:18,229 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:46:18,230 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: missing ), unterminated subpattern at position 0
+2025-08-19 14:47:02,006 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:47:02,008 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: missing ), unterminated subpattern at position 0
+2025-08-19 14:59:28,585 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-19 14:59:28,861 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt
+2025-08-20 09:41:07,018 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-20 09:44:00,012 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-20 09:44:00,292 - __main__ - [32mINFO[0m - Mundo extraído para job job_123 en ../Storage/Jobs/job_123/world/autonomous_robot
+2025-08-20 09:44:00,292 - __main__ - [31mERROR[0m - Archivo de configuración no encontrado para job job_123
+2025-08-20 09:51:37,909 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-20 09:51:37,910 - __main__ - [32mINFO[0m - Workspace creado para job job_123 en ../Storage/Jobs/job_123
+2025-08-20 09:51:37,972 - __main__ - [32mINFO[0m - Mundo extraído para job job_123 en ../Storage/Jobs/job_123/world/autonomous_robot
+2025-08-20 09:51:37,972 - __main__ - [31mERROR[0m - Archivo de configuración no encontrado para job job_123
+2025-08-20 09:56:26,846 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-20 09:56:26,847 - __main__ - [31mERROR[0m - Error validando mundo: 'str' object has no attribute 'rglob'
+2025-08-20 09:56:26,847 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+2025-08-20 09:59:39,077 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-20 09:59:39,078 - __main__ - [31mERROR[0m - Error validando mundo: 'str' object has no attribute 'rglob'
+2025-08-20 09:59:39,078 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+2025-08-20 10:00:07,851 - core.logging - [32mINFO[0m - Sistema de logging inicializado - Nivel: INFO
+2025-08-20 10:00:07,853 - __main__ - [32mINFO[0m - El robot 'principal_robot' fue encontrado en el archivo.
+2025-08-20 10:00:07,854 - __main__ - [32mINFO[0m - Mundo validado correctamente: Autonomous Robot.wbt, robots encontrados: True
+2025-08-20 10:00:07,855 - __main__ - [32mINFO[0m - Archivo .wbt parcheado correctamente: Autonomous Robot.wbt

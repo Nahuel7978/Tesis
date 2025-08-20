@@ -1,0 +1,23 @@
+2025-08-19 10:40:31,204 - __main__ - [31mERROR[0m - Error creando workspace para job job_123: 'parents' is an invalid keyword argument for mkdir()
+2025-08-19 10:41:13,925 - __main__ - [31mERROR[0m - Error creando workspace para job job_123: 'exist_ok' is an invalid keyword argument for mkdir()
+2025-08-19 10:44:21,483 - __main__ - [31mERROR[0m - Error creando workspace para job job_123: [Errno 17] File exists: '../Storage/job_123/world'
+2025-08-19 11:46:12,895 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún archivo .wbt en el mundo
+2025-08-19 11:50:35,805 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 11:51:17,785 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 12:08:56,976 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 12:10:07,825 - __main__ - [31mERROR[0m - Error validando mundo: No se encontró ningún robot en el archivo .wbt
+2025-08-19 12:11:56,602 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'principal_robot', ' en el archivo .wbt')
+2025-08-19 12:13:14,115 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'principal_robot', ' en el archivo .wbt')
+2025-08-19 12:15:14,450 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'Elisa3', ' en el archivo .wbt')
+2025-08-19 12:15:31,997 - __main__ - [31mERROR[0m - Error validando mundo: ('No se encontró ningún robot ', 'Elisa3', ' en el archivo .wbt')
+2025-08-19 14:25:49,107 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: [Errno 2] No such file or directory: '/home/roman7978/Documentos/university_portfolio/Tesis/SimulationControlApi/Storage/job_123/world/Autonomous Robot/Autonomous Robot.wbt'
+2025-08-19 14:42:41,256 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: compile() takes from 1 to 2 positional arguments but 3 were given
+2025-08-19 14:45:41,026 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: compile() takes from 1 to 2 positional arguments but 3 were given
+2025-08-19 14:46:18,230 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: missing ), unterminated subpattern at position 0
+2025-08-19 14:47:02,008 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: missing ), unterminated subpattern at position 0
+2025-08-20 09:44:00,292 - __main__ - [31mERROR[0m - Archivo de configuración no encontrado para job job_123
+2025-08-20 09:51:37,972 - __main__ - [31mERROR[0m - Archivo de configuración no encontrado para job job_123
+2025-08-20 09:56:26,847 - __main__ - [31mERROR[0m - Error validando mundo: 'str' object has no attribute 'rglob'
+2025-08-20 09:56:26,847 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+2025-08-20 09:59:39,078 - __main__ - [31mERROR[0m - Error validando mundo: 'str' object has no attribute 'rglob'
+2025-08-20 09:59:39,078 - __main__ - [31mERROR[0m - Error parcheando archivo .wbt: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
