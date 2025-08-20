@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 from uuid import uuid4
 import json, shutil, os
-from Services.core.config import JOBS_ROOT
+#from Services.core.config import JOBS_ROOT
 from Services.simulation_service import SimulationService   # start_job, cancel_job, get_status, etc.
 
 router = APIRouter()
@@ -13,7 +13,6 @@ service = SimulationService()
 # --- Endpoints ---
 @router.post("/jobs", status_code=202)
 async def create_job(
-    background_tasks: BackgroundTasks,
     world_zip: UploadFile = File(...),
     hparams: str = Form(...),
 ):
@@ -26,7 +25,7 @@ async def create_job(
     config_path=os.path.join(job_path, "config","train_config.json")
 
     try:
-        with open(world_zip_path,"wb",encoding='utf-8') as f:
+        with open(world_zip_path,"wb") as f:
             shutil.copyfileobj(world_zip.file, f)
         
     except Exception as e:
@@ -59,7 +58,7 @@ async def get_job_logs(job_id: str, tail: int = 200):
     """
     Devuelve las últimas 'tail' líneas de train.log (útil para polling rápido).
     Para streaming en tiempo real usá WebSocket/SSE por separado (stream_service).
-    """
+    
     job_dir = JOBS_ROOT / job_id
     log_file = job_dir / "logs" / "train.log"
     if not log_file.exists():
@@ -72,21 +71,23 @@ async def get_job_logs(job_id: str, tail: int = 200):
             return {"lines": data[-tail:]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    """
 
 
 @router.get("/jobs/{job_id}/artifacts/model")
 async def download_model(job_id: str):
+    """
     model_file = JOBS_ROOT / job_id / "artifacts" / "model.zip"
     if not model_file.exists():
         raise HTTPException(status_code=404, detail="Modelo no encontrado")
     return FileResponse(path=str(model_file), filename="model.zip", media_type="application/zip")
-
+    """
 
 @router.delete("/jobs/{job_id}", status_code=204)
 async def cancel_job(job_id: str):
     """
     Cancela y limpia un job: detiene contenedor y marca job como cancelado.
-    """
+    
     try:
         training_service.cancel_job(job_id)
     except FileNotFoundError:
@@ -94,3 +95,4 @@ async def cancel_job(job_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error cancelando job: {e}")
     return JSONResponse(status_code=204, content=None)
+    """
