@@ -1,8 +1,8 @@
 import os
 class Config:
     def __init__(self):
-        self.storage_path = os.getenv("STORAGE_PATH", "../Storage/Jobs")
-        self.internal_controller_path = os.getenv("STORAGE_PATH", "../Storage/InternalController")
+        self.storage_path = os.getenv("STORAGE_PATH", "./Storage/Jobs")
+        self.internal_controller_path = os.getenv("STORAGE_PATH", "./Storage/InternalController")
 
     def get_storage_path(self):
         return self.storage_path
