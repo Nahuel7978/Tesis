@@ -2,8 +2,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from SimulationControlApi.routers.routers_api import router as api_router
-from Services.core.config import CORS_ORIGINS  # tu configuración central
+from routers.routers_api import router as api_router
+#from Services.core.config import CORS_ORIGINS  # tu configuración central
 import logging
 
 logger = logging.getLogger("scapi")
@@ -27,6 +27,7 @@ def create_app() -> FastAPI:
     )
 
     # Middlewares: CORS ejemplo (ajustar CORS_ORIGINS en config)
+    """
     app.add_middleware(
         CORSMiddleware,
         allow_origins=CORS_ORIGINS,
@@ -34,7 +35,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    """
     # Routers
     app.include_router(api_router, prefix="/SimulationControlApi/v1")
 
