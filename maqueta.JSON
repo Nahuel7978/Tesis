@@ -1,0 +1,13 @@
+{
+    "def_robot": "principal_robot",
+    "controller": "robotController",
+    "env_class": "RobotController",
+    "algo": "DQN",
+    "policy": "MinPolicy",
+    "timesteps": 200000,
+    "algo_params": {
+      "learning_rate": 0.0003,
+      "batch_size": 64,
+      "gamma": 0.99
+    }
+  }
