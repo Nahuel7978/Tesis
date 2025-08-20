@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
-from core.config import Config
-from core.logging import get_logger
+from Services.core.config import Config
+from Services.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -78,7 +78,6 @@ class WorldService:
         """
         job_path = os.path.join(self.jobs_storage_path, job_id)
         world_path = os.path.join(job_path, 'world')
-        extracted_path=os.path.join(world_path, Path(zip_file_path).stem)
         
         try:
             with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
@@ -86,6 +85,16 @@ class WorldService:
                 bad_file = zip_ref.testzip()
                 if bad_file:
                     raise WorldProcessingError(f"Archivo ZIP corrupto: {bad_file}")
+                
+                # Encontrar el nombre de la carpeta raíz dentro del ZIP
+                if zip_ref.namelist():
+                    first_item = zip_ref.namelist()[0]
+                    # Extraer solo el nombre de la carpeta (ej. "autonomo/")
+                    if '/' in first_item:
+                        extracted_folder_name = first_item.split('/')[0]
+                
+                if not extracted_folder_name:
+                    raise WorldProcessingError("No se pudo determinar la carpeta raíz en el archivo ZIP.")
                 
                 # Validar nombres de archivos (seguridad)
                 for member in zip_ref.infolist():
@@ -95,6 +104,7 @@ class WorldService:
                 # Extraer archivos
                 zip_ref.extractall(world_path)
                 
+            extracted_path=os.path.join(world_path, extracted_folder_name)
             logger.info(f"Mundo extraído para job {job_id} en {extracted_path}")
             return extracted_path
             
