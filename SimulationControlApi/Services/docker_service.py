@@ -1,150 +1,242 @@
 import docker
 import os
-import threading
-# Configuración
-IMAGE_NAME = "webots_image"  # Nombre de tu imagen
-WORLD_PATH = "/home/roman7978/Documentos/university_portfolio/Tesis/Autonomous Robot/worlds"  # Ruta absoluta en tu host
-WORLD_NAME = "Autonomous Robot.wbt"
-PROTOS_PATH = "/home/roman7978/Documentos/university_portfolio/Tesis/Autonomous Robot/protos"  # Ruta absoluta en tu host
-CONTROLERS_PATH = "/home/roman7978/Documentos/university_portfolio/Tesis/Autonomous Robot/controllers"  # Ruta absoluta en tu host
-CONTAINER_WORLD_PATH = "/workspace/worlds"  # Ruta donde lo verá el contenedor
-CONTAINER_PROTOS_PATH = "/workspace/protos"  # Ruta donde están los protos en el contenedor
-CONTAINER_CONTROLLERS_PATH = "/workspace/controllers"  # Ruta donde están los controladores en el contenedor
+from pathlib import Path
+import logging
 
-def run_webots_world(image_name, world_file, local_worlds_dir, local_protos, local_controllers, container_name="webots_headless"):
-    """
-    Ejecuta Webots en modo headless dentro de un contenedor Docker.
+# Nombre de la imagen Docker
+IMAGE_NAME = "webots_image" 
 
-    :param image_name: Nombre de la imagen Docker de Webots.
-    :param world_file: Nombre del archivo .wbt a ejecutar (debe estar en local_worlds_dir).
-    :param local_worlds_dir: Ruta local donde están los mundos.
-    :param container_name: Nombre opcional del contenedor.
-    :return: Logs de la ejecución.
-    """
-    # Validar que el world existe
-    world_path = os.path.join(local_worlds_dir, world_file)
-    if not os.path.isfile(world_path):
-        raise FileNotFoundError(f"El archivo {world_file} no existe en {local_worlds_dir}")
+logger = logging.getLogger(__name__)
 
-    # Crear cliente de Docker
-    client = docker.from_env()
+class DockerService:
+    def __init__(self):
+        """
+        Inicializa el servicio de Docker.
 
-    # Eliminar contenedor previo si existe
-    try:
-        old_container = client.containers.get(container_name)
-        old_container.stop()
-        old_container.remove()
-    except docker.errors.NotFound:
-        pass
+        Args:
+            image_name: Nombre de la imagen de Docker a utilizar para las simulaciones.
+        """
+        self.image_name = IMAGE_NAME
+        try:
+            # Crear cliente de Docker
+            self.client = docker.from_env()
+        except docker.errors.DockerException:
+            logger.error("Error: No se pudo conectar con Docker.")
+            raise
+        
+        BASE_DIR = Path(__file__).parent.parent  # Directorio del proyecto
+        self.jobs_storage_path = (BASE_DIR / "Storage" / "Jobs").resolve()
+        self.internal_controller_path = (BASE_DIR / "Storage" / "InternalController").resolve()
 
-    try:
-        print("Iniciando contenedor Docker para Webots...")
-        # Ejecutar contenedor
-        container = client.containers.run(
-            image=image_name,
-            name=container_name,
-            user=f"{os.getuid()}:{os.getgid()}",
-            command=f"""bash -c '
-                            Xvfb :99 -screen 0 1280x1024x24 &
-                            sleep 2
-                            webots --no-rendering --batch --mode=fast --stdout --stderr \"{CONTAINER_WORLD_PATH}/{world_file}\"'
-                    """,
-            working_dir="/workspace",
-            volumes={
-                     os.path.abspath(local_worlds_dir): {
-                        'bind': CONTAINER_WORLD_PATH, 
-                        'mode': 'ro'
-                    },
-                    os.path.abspath(local_protos): {
-                        'bind': CONTAINER_PROTOS_PATH, 
-                        'mode': 'ro'
-                    },
-                    os.path.abspath(local_controllers): {
-                        'bind': CONTAINER_CONTROLLERS_PATH, 
-                        'mode': 'rw'
-                    },
-                    os.path.abspath("../train/train_logs"): {
-                        'bind': f'{CONTAINER_CONTROLLERS_PATH}/internalTrainingController/train_logs',
-                        'mode': 'rw'
-                    },
-                    os.path.abspath("../train/train_result"): {
-                        'bind': f'{CONTAINER_CONTROLLERS_PATH}/internalTrainingController/train_result',
-                        'mode': 'rw'
-                    }
-                },
-                
-            detach=True,
-            tty=True,
-            environment={
-                "USER": os.getenv("USER", "default"),
-                "USERNAME": os.getenv("USER", "default"),
-                "DISPLAY": ":99", #En un contenedor Docker sin pantalla física, Xvfb crea una pantalla virtual (normalmente :99 o :1)
-                "QT_X11_NO_MITSHM": "1", #
-                "QT_QPA_PLATFORM": "xcb", #Webots usa Qt, y necesita especificar cómo comunicarse con el servidor X (Xvfb)
-                "LIBGL_ALWAYS_SOFTWARE":"1", #Fuerza a OpenGL a usar renderizado por software (CPU)
-                "GALLIUM_DRIVER":"llvmpipe", #llvmpipe es un driver de Mesa que hace renderizado OpenGL usando la CPU de forma eficiente
-                "MESA_GL_VERSION_OVERRIDE": "3.3"
+    def start_simulation_for_job(self, job_id: str, world_file_abs_path: Path):
+        """
+        Levanta un contenedor Docker y ejecuta una simulación de Webots para un job específico.
+
+        Args:
+            job_id: El ID del job a ejecutar.
+            world_file_abs_path: La ruta absoluta al archivo .wbt que se debe ejecutar.
+
+        Returns:
+            True si se inició correctamente, o None si hubo un error.
+        """
+        container_name = f"webots_job_{job_id}"
+        logger.info(f"Iniciando simulación para el job {job_id} en el contenedor {container_name}")
+
+        # Limpiar contenedores previos.
+        try:
+            old_container = self.client.containers.get(container_name)
+            logger.warning(f"Contenedor previo '{container_name}' encontrado. Deteniendo y eliminando...")
+            old_container.stop()
+            old_container.remove()
+        except docker.errors.NotFound:
+            pass  # Es el escenario ideal, no hay contenedor previo.
+        except docker.errors.APIError as e:
+            logger.error(f"Error de la API de Docker al intentar limpiar contenedor previo: {e}")
+            raise
+
+        # Definición de rutas y volúmenes
+        host_job_path = self.jobs_storage_path / job_id
+        print(f"host_job_path: {host_job_path}")
+        
+        # El directorio 'world' del job que contiene el mundo extraído
+        host_world_dir = host_job_path / "world"
+        print(f"host_world_dir: {host_world_dir}")
+        
+        # Ruta del .wbt relativa a la carpeta 'world' del job
+        world_file_relative_path = world_file_abs_path.relative_to(host_world_dir)
+        print(f"world_file_relative_path: {world_file_relative_path}")
+
+        # Ruta del .wbt que se usará dentro del contenedor
+        container_wbt_path = Path("/workspace/world") / world_file_relative_path
+        print(f"container_wbt_path: {container_wbt_path}")
+
+        # El controlador 'InternalController' se monta en el subdirectorio 'controllers'.
+        container_project_root = Path("/workspace/world") / world_file_relative_path.parts[0]
+        container_controller_dir = container_project_root / "controllers" / "InternalController"
+        print(f"container_controller_dir: {container_controller_dir}")
+
+        volumes = {
+            str(host_world_dir): {
+                'bind': '/workspace/world',
+                'mode': 'rw'
             },
-            stdout=True,
-            stderr=True
-        )
-        print("Corriendo")
-        print("Logs de la simulación:")
-        print("-" * 50)
-        
-        # Buffer para almacenar los bytes que no forman una línea completa
-        log_buffer = b''
+            str(host_job_path / "logs"): {
+                'bind': '/workspace/logs',
+                'mode': 'rw'
+            },
+            str(host_job_path / "trained_model"): {
+                'bind': '/workspace/trained_model',
+                'mode': 'rw'
+            },
+            str(host_job_path / "config"): {
+                'bind': '/workspace/config',
+                'mode': 'ro'
+            },
+            str(self.internal_controller_path): {
+                'bind': str(container_controller_dir),
+                'mode': 'rw'
+            }
+        }
 
-        # Capturar logs en tiempo real y mostrarlos completos
-        for chunk in container.logs(stream=True, follow=True):
-            # Añadimos el nuevo chunk de bytes al buffer
-            log_buffer += chunk
+        # Comandos y variables de entorno
+        # xvfb-run es una utilidad que simplifica el uso de Xvfb para aplicaciones headless.
+        command = f"""bash -c '
+                        echo "Configurando entorno..."
+                        mkdir -p /tmp/webots_home/.local/share/applications
+                        mkdir -p /tmp/webots_home/.config/Cyberbotics
+                        mkdir -p /tmp/.X11-unix
+                        chmod 1777 /tmp/.X11-unix
+                        
+                        find /workspace/world -name "*" -path "*/controllers/*" -type f -exec chmod +x {{}} \;
 
-            # Buscamos saltos de línea ('\n') en el buffer
-            while b'\n' in log_buffer:
-                # Dividimos el buffer en la primera línea completa y el resto
-                line, log_buffer = log_buffer.split(b'\n', 1)
+                        echo "Iniciando Xvfb..."
+                        Xvfb :99 -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &
+                        sleep 3
+                        
+                        echo "Verificando conectividad..."
+                        ping -c 1 raw.githubusercontent.com || echo "Sin conectividad a internet - modo offline"
+
+                        webots --no-rendering --batch --mode=fast --stdout --stderr "{container_wbt_path}"'
+                   """
+
+        # Variables de entorno.
+        environment = {
+            "USER": os.getenv("USER", "default"),
+            "USERNAME": os.getenv("USER", "default"),
+            "HOME": "/tmp/webots_home",
+            "XDG_RUNTIME_DIR": "/tmp/runtime-webotsuser",
+            "DISPLAY": ":99", #En un contenedor Docker sin pantalla física, Xvfb crea una pantalla virtual (normalmente :99 o :1)
+            "QT_X11_NO_MITSHM": "1",
+            "QT_QPA_PLATFORM": "xcb",#Webots usa Qt, y necesita especificar cómo comunicarse con el servidor X (Xvfb)
+            ###
+            #CAMBIAR CUANDO SE USE GPU !!!! ACA AQUI
+            "LIBGL_ALWAYS_SOFTWARE": "1",#Fuerza a OpenGL a usar renderizado por software (CPU)
+            "GALLIUM_DRIVER": "llvmpipe",#llvmpipe es un driver de Mesa que hace renderizado OpenGL usando la CPU de forma eficiente
+            ###
+            "MESA_GL_VERSION_OVERRIDE": "3.3",
+            "PYTHONPATH": "/workspace" #El contenedor tendrá /workspace en el Python path
+        }
+
+        #Ejecución del contenedor
+        try:
+            logger.info(f"Creando y ejecutando contenedor '{container_name}' con imagen '{self.image_name}'...")
+            container = self.client.containers.run(
+                image=self.image_name,
+                name=container_name,
+                command=command,
+                network_mode="bridge",
+                working_dir="/workspace",
+                volumes=volumes,
+                environment=environment,
+                user=f"{os.getuid()}:{os.getgid()}",  # Ejecuta como usuario actual para evitar problemas de permisos
+                detach=True,
+                tty=True,
+                stdout=True,
+                stderr=True
+            )
+            logger.info(f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente.")
+            print("Logs de la simulación:")
+            print("-" * 50)
+
+            # Buffer para almacenar los bytes que no forman una línea completa
+            log_buffer = b''
+            controller_finished = False
+
+            # Capturar logs en tiempo real y mostrarlos completos
+            for chunk in container.logs(stream=True, follow=True):
+                # Añadimos el nuevo chunk de bytes al buffer
+                log_buffer += chunk
                 
-                # Decodificamos la línea y la imprimimos
-                print(line.decode("utf-8"))
+                # Buscamos saltos de línea ('\n') en el buffer
+                while b'\n' in log_buffer:
+                    # Dividimos el buffer en la primera línea completa y el resto
+                    line, log_buffer = log_buffer.split(b'\n', 1)
+                    
+                    # Decodificamos la línea y la imprimimos
+                    decoded_line = line.decode("utf-8")
+                    print(decoded_line)
+                    
+                    # Verificar si InternalController terminó
+                    if "InternalController' controller exited with status:" in decoded_line:
+                        logger.info("InternalController terminó, deteniendo simulación...")
+                        controller_finished = True
+                        break
+                
+                if controller_finished:
+                    break
 
-        # Después de que el bucle termine, imprimimos cualquier resto en el buffer
-        if log_buffer:
-            print(log_buffer.decode("utf-8"))
+            # Después de que el bucle termine, imprimimos cualquier resto en el buffer
+            if log_buffer:
+                print(log_buffer.decode("utf-8"))
             
-        # Esperar a que termine la simulación
-        exit_code = container.wait()
-        logs = container.logs().decode("utf-8")
-        # Eliminar contenedor al finalizar
-        container.remove()
+            # Detener el contenedor manualmente si el controlador terminó
+            if controller_finished:
+                try:
+                    logger.info("Deteniendo contenedor...")
+                    container.stop(timeout=10)  # Dar 10 segundos para terminar gracefully
+                    logger.info("Contenedor detenido exitosamente")
+                except Exception as e:
+                    logger.warning(f"Error al detener contenedor: {e}")
+                    container.kill()  # Forzar terminación si no responde
+            
+            
+            exit_code = container.wait()
+            container.remove()
+        except docker.errors.ImageNotFound:
+            logger.error(f"La imagen de Docker '{self.image_name}' no fue encontrada.")
+            raise
+        except docker.errors.ContainerError as e:
+            logger.error(f"Error dentro del contenedor '{container_name}': {e}")
+            raise
+        except docker.errors.APIError as e:
+            logger.error(f"Error en la API de Docker al iniciar el contenedor: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error inesperado al iniciar la simulación para el job {job_id}: {e}")
+            raise
 
-        return {"exit_code": exit_code.get("StatusCode", 1), "logs": logs, "success": exit_code.get("StatusCode", 1) == 0}
-    
-    except docker.errors.ContainerError as e:
-        print(f"Error en la ejecución del contenedor: {e}")
-        print("Revisa que el archivo del mundo sea válido y que Webots pueda ejecutarse.")
-        
-    except docker.errors.ImageNotFound:
-        print(f"La imagen '{IMAGE_NAME}' no existe.")
-        print("Construye la imagen primero con: docker build -t webots_image .")
-        
-    except docker.errors.APIError as e:
-        print(f"Error en la API de Docker: {e}")
-        
-    except Exception as e:
-        print(f"Error inesperado: {e}")
+    def stop_simulation(self, job_id: str) -> bool:
+        """Detiene y elimina el contenedor asociado a un job."""
+        container_name = f"webots_job_{job_id}"
+        try:
+            container = self.client.containers.get(container_name)
+            logger.info(f"Deteniendo contenedor '{container_name}'...")
+            container.stop()
+            container.remove()
+            logger.info(f"Contenedor '{container_name}' detenido y eliminado.")
+            return True
+        except docker.errors.NotFound:
+            logger.warning(f"No se encontró el contenedor '{container_name}' para detener.")
+            return False
+        except docker.errors.APIError as e:
+            logger.error(f"Error de la API de Docker al detener el contenedor '{container_name}': {e}")
+            return False
 
 
 if __name__ == "__main__":
-    # Ejemplo de uso
-    resultado = run_webots_world(
-        image_name=IMAGE_NAME,
-        world_file=WORLD_NAME,
-        local_worlds_dir=WORLD_PATH,
-        local_protos=PROTOS_PATH,
-        local_controllers=CONTROLERS_PATH
-    )
-
-    print(f"Éxito: ", resultado['success'])
-    print("Código de salida:", resultado["exit_code"])
-    
+    logging.basicConfig(level=logging.INFO)
+    docker_service = DockerService()
+    base_dir = Path(__file__).parent.parent 
+    pt= (base_dir / "Storage/Jobs/job_1/world/Autonomous Robot/worlds/Autonomous Robot.wbt").resolve()
+    #docker_service.start_simulation_for_job("job_1", pt)
+    docker_service.stop_simulation("job_1")
