@@ -66,6 +66,7 @@ def trainAgent(env):
 
 #------------
 print("Entrenando agente...")
-env = RobotController(obs_space=403, act_space=3)
-trainAgent(env)
-#check_env(env, warn=True)
+env = RobotController()
+#trainAgent(env)
+print(env.get_observations())
+check_env(env, warn=True)
