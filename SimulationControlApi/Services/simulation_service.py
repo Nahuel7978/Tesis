@@ -3,16 +3,17 @@ import re
 from pathlib import Path
 import logging
 from Services.world_service import WorldService
+from Services.docker_service import DockerService
 
 logger = logging.getLogger(__name__)
 
 class SimulationService:
     def __init__(self):
-        self.image_name = "webots_image:lasted"  # Nombre de tu imagen
         self.storage_path = Path("Storage/Jobs")
         self._current_max_id = None
         self._initialize_max_id()
         self.world_service = WorldService()
+        self.docker_service = DockerService()
         
         
     def _initialize_max_id(self) -> None:
@@ -78,8 +79,23 @@ class SimulationService:
          return self.world_service.setup_job_workspace(job),job
 
     def start_job(self, job:str, zip_path:Path):
-        extracted_path = self.world_service.extract_world_archive(zip_path, job)
-        name,controller,env_class = self.world_service.get_robot(job)
-        wbt = self.world_service.validate_world(name,Path(extracted_path))
-        self.world_service.patch_world_controllers(name,wbt)
+        try:
+            extracted_path = self.world_service.extract_world_archive(zip_path, job)
+
+            name,controller,env_class = self.world_service.get_robot(job)
+            
+            wbt = self.world_service.validate_world(name,Path(extracted_path))
+
+            print("wbt :",wbt)
+            self.world_service.patch_world_controllers(name,wbt)
+
+            """
+            logger.info(f"Iniciando contenedor para el job {job} con el mundo {wbt.name}")
+
+            return self.docker_service.start_simulation_for_job(job, wbt.resoleve())
+            """
+        except Exception as e:
+            logger.error(f"Falló el inicio del job {job}: {e}")
+            # ... Eliminar directorio ....
+            raise
         
