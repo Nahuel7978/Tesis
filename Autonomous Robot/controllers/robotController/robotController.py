@@ -8,7 +8,7 @@ class RobotController(RobotSupervisorEnv):
     """
     Representa al robot Husuarion Rosbot.
     """
-    def __init__(self,obs_space=0, act_space=0):
+    def __init__(self):
         """
            Inicializa un objeto de tipo HROSbot.
 
@@ -20,6 +20,8 @@ class RobotController(RobotSupervisorEnv):
         super().__init__()
         
         #--- Parametros de entrenamiento
+        obs_space=403
+        act_space=3
         self.observation_space = Box(low=-np.inf, high=np.inf, shape=(obs_space,), dtype=np.float32)
         self.action_space = Discrete(act_space)
         self.obs_space = obs_space
@@ -139,6 +141,7 @@ class RobotController(RobotSupervisorEnv):
     def get_observations(self):
         lidar_data = np.array(self.lidar.getRangeImage())
         lidar_data[np.isinf(lidar_data)] = 10
+        lidar_data[np.isnan(lidar_data)] = 0
         signal_strength = 0.0
         distance = 0.0
         angle = 0.0
