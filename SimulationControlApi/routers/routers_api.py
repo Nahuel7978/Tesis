@@ -43,22 +43,23 @@ async def create_job(
         raise HTTPException(status_code=500, detail=f"Error al guardar el archivo de configuración: {str(e)}")
     
     service.start_job(job, world_zip_path)
-
-    return {"job_id": job, "status": "Entrenamiento iniciado", "message": "La simulacion se está ejecutando en segundo plano."}
-
+    try:
+        return {"job_id": job, "status": "Entrenamiento iniciado", "message": "La simulacion se está ejecutando en segundo plano."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Falló el inicio del job: {e}")
+    
 @router.delete("/jobs/{job_id}", status_code=204)
 async def delete_job(job_id: str):
     """
     Cancela y limpia un job: detiene contenedor y marca job como cancelado.
     """
-    
     try:
         service.cancel_job(job_id)
+        
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Job no encontrado")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error cancelando job: {e}")
-    return JSONResponse(status_code=204, content=None)
     
 
 
