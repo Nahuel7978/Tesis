@@ -155,53 +155,7 @@ class DockerService:
                 stderr=True
             )
             logger.info(f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente.")
-            print("Logs de la simulación:")
-            print("-" * 50)
-
-            # Buffer para almacenar los bytes que no forman una línea completa
-            log_buffer = b''
-            controller_finished = False
-
-            # Capturar logs en tiempo real y mostrarlos completos
-            for chunk in container.logs(stream=True, follow=True):
-                # Añadimos el nuevo chunk de bytes al buffer
-                log_buffer += chunk
-                
-                # Buscamos saltos de línea ('\n') en el buffer
-                while b'\n' in log_buffer:
-                    # Dividimos el buffer en la primera línea completa y el resto
-                    line, log_buffer = log_buffer.split(b'\n', 1)
-                    
-                    # Decodificamos la línea y la imprimimos
-                    decoded_line = line.decode("utf-8")
-                    print(decoded_line)
-                    
-                    # Verificar si InternalController terminó
-                    if "InternalController' controller exited with status:" in decoded_line:
-                        logger.info("InternalController terminó, deteniendo simulación...")
-                        controller_finished = True
-                        break
-                
-                if controller_finished:
-                    break
-
-            # Después de que el bucle termine, imprimimos cualquier resto en el buffer
-            if log_buffer:
-                print(log_buffer.decode("utf-8"))
-            
-            # Detener el contenedor manualmente si el controlador terminó
-            if controller_finished:
-                try:
-                    logger.info("Deteniendo contenedor...")
-                    container.stop(timeout=10)  # Dar 10 segundos para terminar gracefully
-                    logger.info("Contenedor detenido exitosamente")
-                except Exception as e:
-                    logger.warning(f"Error al detener contenedor: {e}")
-                    container.kill()  # Forzar terminación si no responde
-            
-            
-            exit_code = container.wait()
-            container.remove()
+            return f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente."
         except docker.errors.ImageNotFound:
             logger.error(f"La imagen de Docker '{self.image_name}' no fue encontrada.")
             raise
