@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 from pathlib import Path
 import logging
 from Services.world_service import WorldService
@@ -59,7 +60,7 @@ class SimulationService:
                 logger.error(f"Error al analizar carpetas de jobs: {e}")
                 return 0
             
-    def get_next_job_id(self) -> int:
+    def _get_next_job_id(self) -> int:
         """
         Obtiene el siguiente ID único para un nuevo job.
         
@@ -74,7 +75,7 @@ class SimulationService:
         return self._current_max_id
     
     def set_job_directory(self):
-         id = self.get_next_job_id()
+         id = self._get_next_job_id()
          job = "job_"+str(id)
          return self.world_service.setup_job_workspace(job),job
 
@@ -86,16 +87,32 @@ class SimulationService:
             
             wbt = self.world_service.validate_world(name,Path(extracted_path))
 
-            print("wbt :",wbt)
+            
             self.world_service.patch_world_controllers(name,wbt)
 
-            """
+            
             logger.info(f"Iniciando contenedor para el job {job} con el mundo {wbt.name}")
-
-            return self.docker_service.start_simulation_for_job(job, wbt.resoleve())
-            """
+            base_dir = Path(__file__).parent.parent 
+            wbt_path=(base_dir / wbt).resolve()
+            return self.docker_service.start_simulation_for_job(job, wbt_path)
+            
         except Exception as e:
             logger.error(f"Falló el inicio del job {job}: {e}")
             # ... Eliminar directorio ....
             raise
         
+    def cancel_job(self, job_id: str):
+        """
+        Cancela un job en ejecución.
+        
+        Args:
+            job_id (str): El ID del job a cancelar.
+        """
+        try:
+            logger.info(f"Cancelando el job {job_id}")
+            self.docker_service.stop_simulation(job_id)        
+            shutil.rmtree(self.storage_path / job_id)
+            logger.info(f"Job {job_id} cancelado exitosamente")
+        except Exception as e:
+            logger.error(f"Error al cancelar el job {job_id}: {e}")
+            raise
