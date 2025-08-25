@@ -115,6 +115,29 @@ class WorldService:
             logger.error(f"Error extrayendo mundo para job {job_id}: {str(e)}")
             raise WorldProcessingError(f"Error en la extracción: {str(e)}")
     
+    def get_robot(self, job_id:str) -> str:
+        """
+        Obtiene el nombre del robot del archivo de configuración .JSON.
+        
+        Returns:
+            str: Nombre del robot
+        """
+        config_path = os.path.join(self.jobs_storage_path, job_id, 'config', 'train_config.json')
+        
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+                
+            def_robot = config_data.get('def_robot')
+            controller = config_data.get('controller')
+            env_class = config_data.get('env_class')
+
+            return def_robot, controller, env_class
+        except FileNotFoundError:
+            logger.error(f"Archivo de configuración no encontrado para job {job_id}")
+        except json.JSONDecodeError:
+            logger.error(f"Error leyendo archivo de configuración para job {job_id}. JSON no valido")
+   
     def validate_world(self,name_robot:str, world_path: Path):
         """
         Valida que el mundo extraído sea válido para Webots.
@@ -308,28 +331,7 @@ class WorldService:
         
         return '\n'.join(result_lines)
         
-    def get_robot(self, job_id:str) -> str:
-        """
-        Obtiene el nombre del robot del archivo de configuración .JSON.
-        
-        Returns:
-            str: Nombre del robot
-        """
-        config_path = os.path.join(self.jobs_storage_path, job_id, 'config', 'train_config.json')
-        
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config_data = json.load(f)
-                
-            def_robot = config_data.get('def_robot')
-            controller = config_data.get('controller')
-            env_class = config_data.get('env_class')
-
-            return def_robot, controller, env_class
-        except FileNotFoundError:
-            logger.error(f"Archivo de configuración no encontrado para job {job_id}")
-        except json.JSONDecodeError:
-            logger.error(f"Error leyendo archivo de configuración para job {job_id}. JSON no valido")
+    
 
 
 if __name__ == "__main__":
