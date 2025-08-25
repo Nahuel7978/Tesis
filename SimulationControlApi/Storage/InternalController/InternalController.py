@@ -1,10 +1,13 @@
 import os
 import sys
+import subprocess
 import json
 import traceback
 import importlib
 from pathlib import Path
 from typing import Dict, Any, Optional
+import re
+from datetime import datetime
 
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO, DQN, A2C, SAC, TD3
@@ -66,6 +69,110 @@ class TrainingLogger:
         if self.log_file:
             self.log_file.close()
 
+class MetricsCapture:
+    """Captura y parsea las métricas de entrenamiento de SB3"""
+    
+    def __init__(self, jsonl_file_path: Path):
+        self.jsonl_file_path = jsonl_file_path
+        self.buffer = ""
+        self.in_metrics_block = False
+        
+    def parse_metrics_block(self, block_text: str) -> Optional[Dict[str, Any]]:
+        """Parsea el bloque de métricas y extrae los valores"""
+        try:
+            metrics = {}
+            timestamp = datetime.now().isoformat()
+            
+            # Patrones para extraer métricas
+            patterns = {
+                'ep_len_mean': r'ep_len_mean\s*\|\s*([\d.-]+)',
+                'ep_rew_mean': r'ep_rew_mean\s*\|\s*([-\d.]+)',
+                'exploration_rate': r'exploration_rate\s*\|\s*([\d.-]+)',
+                'episodes': r'episodes\s*\|\s*(\d+)',
+                'fps': r'fps\s*\|\s*([\d.-]+)',
+                'time_elapsed': r'time_elapsed\s*\|\s*(\d+)',
+                'total_timesteps': r'total_timesteps\s*\|\s*(\d+)'
+            }
+            
+            for key, pattern in patterns.items():
+                match = re.search(pattern, block_text)
+                if match:
+                    value = match.group(1)
+                    # Convertir a número si es posible
+                    try:
+                        if '.' in value:
+                            metrics[key] = float(value)
+                        else:
+                            metrics[key] = int(value)
+                    except ValueError:
+                        metrics[key] = value
+            
+            if metrics:
+                metrics['timestamp'] = timestamp
+                return metrics
+                
+        except Exception as e:
+            print(f"Error al parsear métricas: {e}")
+            
+        return None
+    
+    def process_output_line(self, line: str):
+        """Procesa cada línea de salida buscando bloques de métricas"""
+        # Detectar inicio de bloque de métricas
+        if "rollout/" in line or "time/" in line:
+            self.in_metrics_block = True
+            self.buffer = line + "\n"
+        elif self.in_metrics_block:
+            self.buffer += line + "\n"
+            
+            # Detectar fin de bloque (línea de guiones)
+            if line.strip().startswith("--") and line.strip().endswith("--"):
+                metrics = self.parse_metrics_block(self.buffer)
+                if metrics:
+                    self.save_metrics_to_jsonl(metrics)
+                
+                # Resetear estado
+                self.in_metrics_block = False
+                self.buffer = ""
+    
+    def save_metrics_to_jsonl(self, metrics: Dict[str, Any]):
+        """Guarda las métricas en formato JSONL"""
+        try:
+            with open(self.jsonl_file_path, 'a', encoding='utf-8') as f:
+                json.dump(metrics, f, separators=(',', ':'))
+                f.write('\n')
+                f.flush()  # Asegurar escritura inmediata
+                
+            print(f"Métricas guardadas: {metrics['timestamp']} - Episodio: {metrics.get('episodes', 'N/A')}")
+            
+        except Exception as e:
+            print(f"Error al guardar métricas: {e}")
+
+class StreamInterceptor:
+    """Intercepta stdout para capturar las métricas de SB3"""
+    
+    def __init__(self, original_stream, metrics_capture):
+        self.original_stream = original_stream
+        self.metrics_capture = metrics_capture
+        
+    def write(self, text):
+        # Escribir a la consola original
+        self.original_stream.write(text)
+        self.original_stream.flush()
+        
+        # Procesar líneas para capturar métricas
+        for line in text.splitlines():
+            if line.strip():
+                self.metrics_capture.process_output_line(line)
+        
+        return len(text)
+    
+    def flush(self):
+        self.original_stream.flush()
+    
+    def __getattr__(self, name):
+        return getattr(self.original_stream, name)
+
 class TrainingController:
     def __init__(self):
         self.logger = TrainingLogger(LOG_DIR)
@@ -73,7 +180,36 @@ class TrainingController:
         self.env = None
         self.model = None
         self.sb3_logger = None
+        self.metrics_capture = None
+        self.original_stdout = None
         
+    def setup_metrics_capture(self):
+        """Configura la captura de métricas de entrenamiento"""
+        try:
+            # Crear directorio de logs si no existe
+            LOG_DIR.mkdir(parents=True, exist_ok=True)
+            
+            # Archivo JSONL para métricas
+            jsonl_file = LOG_DIR / "training_metrics.jsonl"
+            
+            # Inicializar captura de métricas
+            self.metrics_capture = MetricsCapture(jsonl_file)
+            
+            # Interceptar stdout
+            self.original_stdout = sys.stdout
+            sys.stdout = StreamInterceptor(self.original_stdout, self.metrics_capture)
+            
+            self.logger.info(f"Captura de métricas configurada. Archivo: {jsonl_file}")
+            
+        except Exception as e:
+            self.logger.error(f"Error al configurar captura de métricas: {e}")
+            raise
+    
+    def restore_stdout(self):
+        """Restaura stdout original"""
+        if self.original_stdout:
+            sys.stdout = self.original_stdout
+
     def load_config(self) -> Dict[str, Any]:
         """Carga la configuración desde el archivo JSON"""
         try:
@@ -235,7 +371,8 @@ class TrainingController:
             raise
     
     def cleanup(self):
-        """Limpieza de recursos"""
+        """Limpieza de recursos"""        
+        subprocess.run(["pkill", "-f", "webots"], check=False)
         try:
             if self.env:
                 self.env.close()
@@ -249,23 +386,21 @@ class TrainingController:
     def run(self):
         """Método principal que ejecuta todo el pipeline de entrenamiento"""
         try:
-            # Cargar configuración
+            self.setup_metrics_capture()
+
             self.config = self.load_config()
-            
-            # Crear entorno
+        
             self.env = self.create_environment(self.config)
             
-            # Validar entorno
             self.validate_environment(self.env)
             
-            # Crear modelo
             self.model = self.create_model(self.config, self.env)
             
-            # Entrenar modelo
             self.train_model(self.config)
             
-            # Guardar modelo
             self.save_model()
+
+            self.cleanup()
             
             self.logger.info("Pipeline de entrenamiento completado exitosamente")
             return 0
@@ -280,7 +415,6 @@ class TrainingController:
             self.cleanup()
 
 def main():
-    """Función principal"""
     controller = TrainingController()
     exit_code = controller.run()
     sys.exit(exit_code)
