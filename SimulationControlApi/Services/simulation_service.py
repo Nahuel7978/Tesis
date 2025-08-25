@@ -98,7 +98,7 @@ class SimulationService:
             
         except Exception as e:
             logger.error(f"Falló el inicio del job {job}: {e}")
-            # ... Eliminar directorio ....
+            shutil.rmtree(self.storage_path / job)
             raise
         
     def cancel_job(self, job_id: str):
