@@ -46,6 +46,21 @@ async def create_job(
 
     return {"job_id": job, "status": "Entrenamiento iniciado", "message": "La simulacion se está ejecutando en segundo plano."}
 
+@router.delete("/jobs/{job_id}", status_code=204)
+async def delete_job(job_id: str):
+    """
+    Cancela y limpia un job: detiene contenedor y marca job como cancelado.
+    """
+    
+    try:
+        service.cancel_job(job_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Job no encontrado")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error cancelando job: {e}")
+    return JSONResponse(status_code=204, content=None)
+    
+
 
 @router.get("/jobs/{job_id}")
 async def get_job_status(job_id: str):
@@ -83,16 +98,3 @@ async def download_model(job_id: str):
     return FileResponse(path=str(model_file), filename="model.zip", media_type="application/zip")
     """
 
-@router.delete("/jobs/{job_id}", status_code=204)
-async def cancel_job(job_id: str):
-    """
-    Cancela y limpia un job: detiene contenedor y marca job como cancelado.
-    
-    try:
-        training_service.cancel_job(job_id)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Job no encontrado")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error cancelando job: {e}")
-    return JSONResponse(status_code=204, content=None)
-    """
