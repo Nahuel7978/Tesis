@@ -10,6 +10,7 @@ if __name__ == "__main__":
             reload=True,
             reload_excludes=[
                 str(current_dir / "Storage"),
+                #str(current_dir / "Services"),
                 str(current_dir / "logs"),
                 str(current_dir / "enviroment_api"),
                 "**/__pycache__",
