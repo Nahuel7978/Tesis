@@ -16,17 +16,18 @@ class DockerService:
         Args:
             image_name: Nombre de la imagen de Docker a utilizar para las simulaciones.
         """
-        self.image_name = IMAGE_NAME
+        self.__image_name = IMAGE_NAME
         try:
             # Crear cliente de Docker
-            self.client = docker.from_env()
+            self.__client = docker.from_env()
         except docker.errors.DockerException:
             logger.error("Error: No se pudo conectar con Docker.")
             raise
         
         BASE_DIR = Path(__file__).parent.parent  # Directorio del proyecto
-        self.jobs_storage_path = (BASE_DIR / "Storage" / "Jobs").resolve()
-        self.internal_controller_path = (BASE_DIR / "Storage" / "InternalController").resolve()
+        self.__service =(BASE_DIR / "Services" / "state_service.py").resolve()
+        self.__jobs_storage_path = (BASE_DIR / "Storage" / "Jobs").resolve()
+        self.__internal_controller_path = (BASE_DIR / "Storage" / "InternalController").resolve()
 
     def start_simulation_for_job(self, job_id: str, world_file_abs_path: Path):
         """
@@ -44,7 +45,7 @@ class DockerService:
 
         # Limpiar contenedores previos.
         try:
-            old_container = self.client.containers.get(container_name)
+            old_container = self.__client.containers.get(container_name)
             logger.warning(f"Contenedor previo '{container_name}' encontrado. Deteniendo y eliminando...")
             old_container.stop()
             old_container.remove()
@@ -55,7 +56,7 @@ class DockerService:
             raise
 
         # Definición de rutas y volúmenes
-        host_job_path = self.jobs_storage_path / job_id
+        host_job_path = self.__jobs_storage_path / job_id
         print(f"host_job_path: {host_job_path}")
         
         # El directorio 'world' del job que contiene el mundo extraído
@@ -73,6 +74,8 @@ class DockerService:
         # El controlador 'InternalController' se monta en el subdirectorio 'controllers'.
         container_project_root = Path("/workspace/world") / world_file_relative_path.parts[0]
         container_controller_dir = container_project_root / "controllers" / "InternalController"
+        monitor_controller_dir = container_controller_dir / "Monitor" / "state_service.py"
+
         print(f"container_controller_dir: {container_controller_dir}")
 
         volumes = {
@@ -92,10 +95,15 @@ class DockerService:
                 'bind': '/workspace/config',
                 'mode': 'ro'
             },
-            str(self.internal_controller_path): {
+            str(self.__internal_controller_path): {
                 'bind': str(container_controller_dir),
                 'mode': 'rw'
+            },
+            str(self.__service):{
+                'bind': str(monitor_controller_dir),
+                'mode': 'ro'
             }
+
         }
 
         # Comandos y variables de entorno
@@ -139,9 +147,9 @@ class DockerService:
 
         #Ejecución del contenedor
         try:
-            logger.info(f"Creando y ejecutando contenedor '{container_name}' con imagen '{self.image_name}'...")
-            container = self.client.containers.run(
-                image=self.image_name,
+            logger.info(f"Creando y ejecutando contenedor '{container_name}' con imagen '{self.__image_name}'...")
+            container = self.__client.containers.run(
+                image=self.__image_name,
                 name=container_name,
                 command=command,
                 network_mode="bridge",
@@ -155,9 +163,45 @@ class DockerService:
                 stderr=True
             )
             logger.info(f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente.")
+            """
+            print("Logs de la simulación:")
+            print("-" * 50)
+
+            # Buffer para almacenar los bytes que no forman una línea completa
+            log_buffer = b''
+            controller_finished = False
+
+            # Capturar logs en tiempo real y mostrarlos completos
+            for chunk in container.logs(stream=True, follow=True):
+                # Añadimos el nuevo chunk de bytes al buffer
+                log_buffer += chunk
+                
+                # Buscamos saltos de línea ('\n') en el buffer
+                while b'\n' in log_buffer:
+                    # Dividimos el buffer en la primera línea completa y el resto
+                    line, log_buffer = log_buffer.split(b'\n', 1)
+                    
+                    # Decodificamos la línea y la imprimimos
+                    decoded_line = line.decode("utf-8")
+                    print(decoded_line)
+                    
+                    # Verificar si InternalController terminó
+                    if "InternalController' controller exited with status:" in decoded_line:
+                        logger.info("InternalController terminó, deteniendo simulación...")
+                        controller_finished = True
+                        break
+                
+                if controller_finished:
+                    break
+
+            # Después de que el bucle termine, imprimimos cualquier resto en el buffer
+            if log_buffer:
+                print(log_buffer.decode("utf-8"))
+            """
+                
             return f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente."
         except docker.errors.ImageNotFound:
-            logger.error(f"La imagen de Docker '{self.image_name}' no fue encontrada.")
+            logger.error(f"La imagen de Docker '{self.__image_name}' no fue encontrada.")
             raise
         except docker.errors.ContainerError as e:
             logger.error(f"Error dentro del contenedor '{container_name}': {e}")
@@ -173,7 +217,7 @@ class DockerService:
         """Detiene y elimina el contenedor asociado a un job."""
         container_name = f"webots_job_{job_id}"
         try:
-            container = self.client.containers.get(container_name)
+            container = self.__client.containers.get(container_name)
             logger.info(f"Deteniendo contenedor '{container_name}'...")
             container.stop()
             container.remove()
