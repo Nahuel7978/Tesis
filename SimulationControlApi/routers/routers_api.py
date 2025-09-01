@@ -48,6 +48,7 @@ async def create_job(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Falló el inicio del job: {e}")
     
+
 @router.delete("/jobs/{job_id}", status_code=204)
 async def delete_job(job_id: str):
     """
@@ -62,40 +63,51 @@ async def delete_job(job_id: str):
         raise HTTPException(status_code=500, detail=f"Error cancelando job: {e}")
     
 
+@router.get("/state/{job_id}", status_code=202)
+async def get_job_state(job_id: str):
+    try:
+        status = service.get_complete_state(job_id)
+        return status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo estado del job: {e}")
 
-@router.get("/jobs/{job_id}")
-async def get_job_status(job_id: str):
-    
-    return ""
 
-
-@router.get("/jobs/{job_id}/logs")
-async def get_job_logs(job_id: str, tail: int = 200):
+@router.get("/jobs/{job_id}/metrics", status_code=200)
+async def get_metrics(job_id: str):
     """
     Devuelve las últimas 'tail' líneas de train.log (útil para polling rápido).
     Para streaming en tiempo real usá WebSocket/SSE por separado (stream_service).
-    
-    job_dir = JOBS_ROOT / job_id
-    log_file = job_dir / "logs" / "train.log"
-    if not log_file.exists():
-        raise HTTPException(status_code=404, detail="Log no encontrado")
-    # Leer últimas 'tail' líneas de forma eficiente
+    """
     try:
-        with log_file.open("rb") as f:
-            # Simple tail: leer todo (ok para logs razonables)
-            data = f.read().decode(errors="ignore").splitlines()
-            return {"lines": data[-tail:]}
+        return service.get_logs(job_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    """
 
 
-@router.get("/jobs/{job_id}/artifacts/model")
+@router.get("/jobs/{job_id}/download/tensorboard", status_code=200)
+async def download_tensorboard(job_id: str):
+    try:
+        tb_path = service.get_tensorboard_path(job_id)
+        response=FileResponse(tb_path, filename=f"tensorboard_file", media_type='application/octet-stream')
+        return response
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error descargando los logs de TensorBoard: {e}")
+
+
+@router.get("/jobs/{job_id}/download/model", status_code=200)
 async def download_model(job_id: str):
     """
-    model_file = JOBS_ROOT / job_id / "artifacts" / "model.zip"
-    if not model_file.exists():
-        raise HTTPException(status_code=404, detail="Modelo no encontrado")
-    return FileResponse(path=str(model_file), filename="model.zip", media_type="application/zip")
+    Descarga el archivo model.zip con el modelo entrenado.
     """
+    try:
+        model_path, message = service.get_model_path(job_id)
+        response=FileResponse(model_path, filename=f"model_{job_id}.zip", media_type='application/zip')
+        response.headers["X-Download-Message"] = message
+        return response
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Modelo no encontrado")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error descargando el modelo: {e}")
 
