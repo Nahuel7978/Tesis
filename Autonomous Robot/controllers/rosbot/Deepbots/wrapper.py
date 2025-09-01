@@ -1,31 +1,46 @@
 import gym
-import signal
+import threading
 
-class Wrapper(gym.Wrapper):
+class TimeoutWrapper(gym.Wrapper):
     def __init__(self, env, timeout_seconds=10):
         super().__init__(env)
-        self.timeout_seconds = timeout_seconds
-    
-    def timeout_handler(self, signum, frame):
-        raise TimeoutError("Step timeout")
-    
-    def step(self, action):
-        # Configurar timeout
-        signal.signal(signal.SIGALRM, self.timeout_handler)
-        signal.alarm(self.timeout_seconds)
+        self.__timeout_seconds = timeout_seconds
         
-        try:
-            result = self.env.step(action)
-            signal.alarm(0)  # Cancelar timeout
-            return result
-        except TimeoutError:
-            signal.alarm(0)
-            print("[WARNING] Timeout en step - terminando episodio")
-            # Retornar estado terminal con reward negativo
-            obs = self.env.get_observations()  # O el último estado conocido
-            return obs, -10.0, True, {"timeout": True}
-        except Exception as e:
-            signal.alarm(0)
-            raise e
+    def step(self, action):
+        """
+        Ejecuta step con timeout usando threading (compatible con Windows y Unix)
+        """
+        result = [None]  # Lista para poder modificar desde el hilo
+        exception = [None]
+        
+        def real_step():
+            try:
+                result[0] = self.env.step(action)
+            except Exception as e:
+                exception[0] = e
+        
+        # Crear y iniciar hilo
+        thread = threading.Thread(target=real_step)
+        thread.daemon = True
+        thread.start()
+        
+        # Esperar con timeout
+        thread.join(timeout=self.__timeout_seconds)
+        
+        if thread.is_alive():
+            # Timeout ocurrió
+            print(f"[WARNING] Timeout en step ({self.__timeout_seconds}s) - terminando episodio")
+            
+            try:
+                obs = self.env.reset()
+                return obs, -10.0, False, {"timeout": True, "timeout_seconds": self.__timeout_seconds}
+            except Exception as e:
+                raise(f"[ERROR] Falló en reset: {e}")
+        
+        # Si hay excepción en el hilo, relanzarla
+        if exception[0] is not None:
+            raise exception[0]
+            
+        return result[0]
         
 
