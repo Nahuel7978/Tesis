@@ -6,8 +6,7 @@ import traceback
 import importlib
 from pathlib import Path
 from typing import Dict, Any, Optional
-import re
-from datetime import datetime
+
 
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO, DQN, A2C, SAC, TD3
@@ -15,10 +14,29 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 
+# ===== IMPORTS LOCALES SIN __init__.py =====
+current_dir = Path(__file__).parent
+monitor_path = str(current_dir / "Monitor")
+wrapper_path = str(current_dir / "Wrapper")
+
+if monitor_path not in sys.path:
+    sys.path.insert(0, monitor_path)
+
+if wrapper_path not in sys.path:
+    sys.path.insert(0, wrapper_path)
+
+from TrainingLogger import TrainingLogger
+from MetricsCapture import MetricsCapture
+from StreamInterceptor import StreamInterceptor
+from state_service import StateService
+from TimeoutWrapper import TimeoutWrapper
+
+
 #PATHS
 WORKSPACE = Path("/workspace")
 CONFIG_PATH = os.environ.get("CONFIG_PATH", WORKSPACE / "config" / "train_config.json")
 LOG_DIR = WORKSPACE / "logs"
+STATE_DIR = LOG_DIR / "state.json"
 MODEL_DIR = WORKSPACE / "trained_model"
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -30,159 +48,18 @@ if str(WORKSPACE) not in sys.path:
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-class TrainingLogger:
-    
-    def __init__(self, log_dir: Path):
-        self.log_dir = log_dir
-        self.log_file = None
-        self._setup_logging()
-    
-    def _setup_logging(self):
-        """Configura el sistema de logging"""
-        try:
-            self.log_file = open(self.log_dir / "train.log", "a", buffering=1)
-        except Exception as e:
-            print(f"Error al configurar logging: {e}")
-            self.log_file = None
-    
-    def log(self, *args, level="INFO"):
-        """Log unificado a archivo y consola"""
-        message = f"[{level}] " + " ".join(str(arg) for arg in args)
-        
-        # Log a consola
-        print(message, flush=True)
-        
-        # Log a archivo si está disponible
-        if self.log_file:
-            print(message, file=self.log_file, flush=True)
-    
-    def error(self, *args):
-        """Log de errores"""
-        self.log(*args, level="ERROR")
-    
-    def info(self, *args):
-        """Log informativo"""
-        self.log(*args, level="INFO")
-    
-    def close(self):
-        """Cierra el archivo de log"""
-        if self.log_file:
-            self.log_file.close()
-
-class MetricsCapture:
-    """Captura y parsea las métricas de entrenamiento de SB3"""
-    
-    def __init__(self, jsonl_file_path: Path):
-        self.jsonl_file_path = jsonl_file_path
-        self.buffer = ""
-        self.in_metrics_block = False
-        
-    def parse_metrics_block(self, block_text: str) -> Optional[Dict[str, Any]]:
-        """Parsea el bloque de métricas y extrae los valores"""
-        try:
-            metrics = {}
-            timestamp = datetime.now().isoformat()
-            
-            # Patrones para extraer métricas
-            patterns = {
-                'ep_len_mean': r'ep_len_mean\s*\|\s*([\d.-]+)',
-                'ep_rew_mean': r'ep_rew_mean\s*\|\s*([-\d.]+)',
-                'exploration_rate': r'exploration_rate\s*\|\s*([\d.-]+)',
-                'episodes': r'episodes\s*\|\s*(\d+)',
-                'fps': r'fps\s*\|\s*([\d.-]+)',
-                'time_elapsed': r'time_elapsed\s*\|\s*(\d+)',
-                'total_timesteps': r'total_timesteps\s*\|\s*(\d+)'
-            }
-            
-            for key, pattern in patterns.items():
-                match = re.search(pattern, block_text)
-                if match:
-                    value = match.group(1)
-                    # Convertir a número si es posible
-                    try:
-                        if '.' in value:
-                            metrics[key] = float(value)
-                        else:
-                            metrics[key] = int(value)
-                    except ValueError:
-                        metrics[key] = value
-            
-            if metrics:
-                metrics['timestamp'] = timestamp
-                return metrics
-                
-        except Exception as e:
-            print(f"Error al parsear métricas: {e}")
-            
-        return None
-    
-    def process_output_line(self, line: str):
-        """Procesa cada línea de salida buscando bloques de métricas"""
-        # Detectar inicio de bloque de métricas
-        if "rollout/" in line or "time/" in line:
-            self.in_metrics_block = True
-            self.buffer = line + "\n"
-        elif self.in_metrics_block:
-            self.buffer += line + "\n"
-            
-            # Detectar fin de bloque (línea de guiones)
-            if line.strip().startswith("--") and line.strip().endswith("--"):
-                metrics = self.parse_metrics_block(self.buffer)
-                if metrics:
-                    self.save_metrics_to_jsonl(metrics)
-                
-                # Resetear estado
-                self.in_metrics_block = False
-                self.buffer = ""
-    
-    def save_metrics_to_jsonl(self, metrics: Dict[str, Any]):
-        """Guarda las métricas en formato JSONL"""
-        try:
-            with open(self.jsonl_file_path, 'a', encoding='utf-8') as f:
-                json.dump(metrics, f, separators=(',', ':'))
-                f.write('\n')
-                f.flush()  # Asegurar escritura inmediata
-                
-            print(f"Métricas guardadas: {metrics['timestamp']} - Episodio: {metrics.get('episodes', 'N/A')}")
-            
-        except Exception as e:
-            print(f"Error al guardar métricas: {e}")
-
-class StreamInterceptor:
-    """Intercepta stdout para capturar las métricas de SB3"""
-    
-    def __init__(self, original_stream, metrics_capture):
-        self.original_stream = original_stream
-        self.metrics_capture = metrics_capture
-        
-    def write(self, text):
-        # Escribir a la consola original
-        self.original_stream.write(text)
-        self.original_stream.flush()
-        
-        # Procesar líneas para capturar métricas
-        for line in text.splitlines():
-            if line.strip():
-                self.metrics_capture.process_output_line(line)
-        
-        return len(text)
-    
-    def flush(self):
-        self.original_stream.flush()
-    
-    def __getattr__(self, name):
-        return getattr(self.original_stream, name)
-
 class TrainingController:
-    def __init__(self):
-        self.logger = TrainingLogger(LOG_DIR)
-        self.config = None
-        self.env = None
-        self.model = None
-        self.sb3_logger = None
-        self.metrics_capture = None
-        self.original_stdout = None
+    def __init__(self, limit_step):
+        self.__logger = TrainingLogger(LOG_DIR)
+        self.__state = StateService(STATE_DIR)
+        self.__config = None
+        self.__env = None
+        self.__model = None
+        self.__sb3_logger = None
+        self.__original_stdout = None
+        self.__limit_step = limit_step
         
+
     def setup_metrics_capture(self):
         """Configura la captura de métricas de entrenamiento"""
         try:
@@ -192,23 +69,20 @@ class TrainingController:
             # Archivo JSONL para métricas
             jsonl_file = LOG_DIR / "training_metrics.jsonl"
             
-            # Inicializar captura de métricas
-            self.metrics_capture = MetricsCapture(jsonl_file)
-            
             # Interceptar stdout
-            self.original_stdout = sys.stdout
-            sys.stdout = StreamInterceptor(self.original_stdout, self.metrics_capture)
+            self.__original_stdout = sys.stdout
+            sys.stdout = StreamInterceptor(self.__original_stdout, MetricsCapture(jsonl_file))
             
-            self.logger.info(f"Captura de métricas configurada. Archivo: {jsonl_file}")
+            self.__logger.info(f"Captura de métricas configurada. Archivo: {jsonl_file}")
             
         except Exception as e:
-            self.logger.error(f"Error al configurar captura de métricas: {e}")
+            self.__logger.error(f"Error al configurar captura de métricas: {e}")
             raise
     
     def restore_stdout(self):
         """Restaura stdout original"""
-        if self.original_stdout:
-            sys.stdout = self.original_stdout
+        if self.__original_stdout:
+            sys.stdout = self.__original_stdout
 
     def load_config(self) -> Dict[str, Any]:
         """Carga la configuración desde el archivo JSON"""
@@ -227,29 +101,29 @@ class TrainingController:
             if missing_fields:
                 raise ValueError(f"Campos requeridos faltantes en configuración: {missing_fields}")
             
-            self.logger.info("Configuración cargada exitosamente")
-            self.logger.info(f"Modelo: {config['model']}")
-            self.logger.info(f"Controlador: {config['controller']}")
-            self.logger.info(f"Clase del entorno: {config['env_class']}")
-            self.logger.info(f"Timesteps: {config['timesteps']}")
+            self.__logger.info("Configuración cargada exitosamente")
+            self.__logger.info(f"Modelo: {config['model']}")
+            self.__logger.info(f"Controlador: {config['controller']}")
+            self.__logger.info(f"Clase del entorno: {config['env_class']}")
+            self.__logger.info(f"Timesteps: {config['timesteps']}")
             
             return config
             
         except Exception as e:
-            self.logger.error(f"Error al cargar configuración: {e}")
+            self.__logger.error(f"Error al cargar configuración: {e}")
             raise
     
-    def create_environment(self, config: Dict[str, Any]):
+    def create_environment(self):
         """Crea e instancia el entorno del usuario"""
         try:
-            module_name = config["controller"]
-            class_name = config["env_class"]
+            module_name = self.__config["controller"]
+            class_name = self.__config["env_class"]
             
             # Importar el módulo del usuario
             try:
                 # Importación directa del módulo
                 module = importlib.import_module(f"{module_name}.{module_name}")
-                self.logger.info(f"Módulo importado desde {module_name}.{module_name}")
+                self.__logger.info(f"Módulo importado desde {module_name}.{module_name}")
             except ImportError as e:
                 raise ImportError(f"No se pudo importar {module_name}: {e}")
             
@@ -262,31 +136,39 @@ class TrainingController:
             # Instanciar el entorno
             env = EnvClass()
             
+            # Envolver con TimeoutWrapper para manejar tiempo del step.
+            env = TimeoutWrapper(env, timeout_seconds=self.__limit_step )
+
             # Envolver con Monitor para logging adicional
             env = Monitor(env, str(LOG_DIR / "monitor"))
             
-            self.logger.info("Entorno creado exitosamente")
+            self.__logger.info("Entorno creado exitosamente")
             return env
             
         except Exception as e:
-            self.logger.error(f"Error al crear entorno: {e}")
+            msg = f"Error al crear entorno: {e}"
+            self.__logger.error(msg)
+            self.__state.set_state(2, str(msg))
             raise
     
-    def validate_environment(self, env):
+    def validate_environment(self):
         """Valida que el entorno sea compatible con Stable-Baselines3"""
         try:
+            env = self.__env
             check_env(env, warn=True)
-            self.logger.info("Entorno validado exitosamente")
+            self.__logger.info("Entorno validado exitosamente")
         except Exception as e:
-            self.logger.error(f"Error en validación del entorno: {e}")
+            msg = f"Error de validación del entorno: {e}"
+            self.__logger.error(msg)
+            self.__state.set_state(2, str(msg))
             raise
     
-    def create_model(self, config: Dict[str, Any], env):
+    def create_model(self):
         """Crea el modelo de RL según la configuración"""
         try:
-            model_name = config["model"]
-            policy = config["policy"]
-            model_params = config.get("model_params", {})
+            model_name = self.__config["model"]
+            policy = self.__config["policy"]
+            model_params = self.__config.get("model_params", {})
             
             # Mapeo de modelos disponibles
             model_map = {
@@ -303,119 +185,130 @@ class TrainingController:
             ModelClass = model_map[model_name]
             
             # Configurar logger de SB3
-            self.sb3_logger = configure(str(LOG_DIR), ["stdout", "tensorboard"])
+            self.__sb3_logger = configure(str(LOG_DIR), ["stdout", "tensorboard"])
             
             # Crear modelo con parámetros
-            self.logger.info(f"Parámetros del modelo: {model_params}")
+            self.__logger.info(f"Parámetros del modelo: {model_params}")
+            env=self.__env
             model = ModelClass(policy, env, **model_params)
-            model.set_logger(self.sb3_logger)
+            model.set_logger(self.__sb3_logger)
             
-            self.logger.info("Modelo creado exitosamente")
+            self.__logger.info("Modelo creado exitosamente")
             return model
             
         except Exception as e:
-            self.logger.error(f"Error al crear modelo: {e}")
+            msg = f"Error al crear modelo: {e}"
+            self.__logger.error(msg)
+            self.__state.set_state(2, str(msg))
             raise
     
-    def setup_callbacks(self, config: Dict[str, Any]):
+    def setup_callbacks(self):
         """Configura callbacks para el entrenamiento"""
-        callbacks = []
         
-        # Checkpoint callback para guardar modelo periódicamente
-        checkpoint_callback = CheckpointCallback(
-            save_freq=max(1000, int(config["timesteps"]) // 10),
-            save_path=str(MODEL_DIR / "checkpoints"),
-            name_prefix="model_checkpoint"
-        )
-        callbacks.append(checkpoint_callback)
+        callbacks = []
+        if(self.__config != None):     
+            # Checkpoint callback para guardar modelo periódicamente
+            checkpoint_callback = CheckpointCallback(
+                save_freq=max(1000, int(self.__config["timesteps"]) // 10),
+                save_path=str(MODEL_DIR / "checkpoints"),
+                name_prefix="model_checkpoint"
+            )
+            callbacks.append(checkpoint_callback)
         
         return callbacks
     
-    def train_model(self, config: Dict[str, Any]):
+    def train_model(self):
         """Ejecuta el entrenamiento del modelo"""
         try:
-            timesteps = int(config["timesteps"])
-            self.logger.info(f"Iniciando entrenamiento por {timesteps} timesteps")
+            timesteps = int(self.__config["timesteps"])
+            self.__logger.info(f"Iniciando entrenamiento por {timesteps} timesteps")
             
             # Configurar callbacks
-            callbacks = self.setup_callbacks(config)
+            callbacks = self.setup_callbacks()
             
             # Entrenar modelo
-            self.model.learn(
+            self.__model.learn(
                 total_timesteps=timesteps,
                 tb_log_name="robot_training",
                 callback=callbacks
             )
             
-            self.logger.info("Entrenamiento completado exitosamente")
+            self.__logger.info("Entrenamiento completado exitosamente")
             
         except Exception as e:
-            self.logger.error(f"Error durante el entrenamiento: {e}")
+            msg = f"Error durante el entrenamiento: {e}"
+            self.__logger.error(msg)
+            self.__state.set_state(2, str(msg))
             raise
     
     def save_model(self):
         """Guarda el modelo entrenado"""
         try:
             model_path = MODEL_DIR / "model.zip"
-            self.model.save(str(model_path))
-            self.logger.info(f"Modelo guardado en: {model_path}")
+            self.__model.save(str(model_path))
+            self.__logger.info(f"Modelo guardado en: {model_path}")
             
             # Guardar también configuración usada
             config_save_path = MODEL_DIR / "training_config.json"
             with open(config_save_path, "w", encoding="utf-8") as f:
-                json.dump(self.config, f, indent=2)
-            self.logger.info(f"Configuración guardada en: {config_save_path}")
+                json.dump(self.__config, f, indent=2)
+            self.__logger.info(f"Configuración guardada en: {config_save_path}")
             
         except Exception as e:
-            self.logger.error(f"Error al guardar modelo: {e}")
+            self.__logger.error(f"Error al guardar modelo: {e}")
             raise
     
     def cleanup(self):
         """Limpieza de recursos"""        
         subprocess.run(["pkill", "-f", "webots"], check=False)
         try:
-            if self.env:
-                self.env.close()
-                self.logger.info("Entorno cerrado")
+            if self.__env:
+                self.__env.close()
+                self.__logger.info("Entorno cerrado")
         except Exception as e:
-            self.logger.error(f"Error al cerrar entorno: {e}")
+            self.__logger.error(f"Error al cerrar entorno: {e}")
         
         finally:
-            self.logger.close()
+            self.__logger.close()
     
     def run(self):
         """Método principal que ejecuta todo el pipeline de entrenamiento"""
         try:
+            
+            self.__state.set_state(1)  # Estado RUNNING
+
             self.setup_metrics_capture()
 
-            self.config = self.load_config()
+            self.__config = self.load_config()
         
-            self.env = self.create_environment(self.config)
+            self.__env = self.create_environment()
             
-            self.validate_environment(self.env)
+            self.validate_environment()
             
-            self.model = self.create_model(self.config, self.env)
+            self.__model = self.create_model()
             
-            self.train_model(self.config)
+            self.train_model()
             
             self.save_model()
 
             self.cleanup()
             
-            self.logger.info("Pipeline de entrenamiento completado exitosamente")
+            self.__state.set_state(3)  # Estado READY
+            self.__logger.info("Pipeline de entrenamiento completado exitosamente")
             return 0
             
         except Exception as e:
-            self.logger.error("Error crítico en el pipeline de entrenamiento:")
-            self.logger.error(str(e))
-            self.logger.error(traceback.format_exc())
+            self.__logger.error("Error crítico en el pipeline de entrenamiento:")
+            self.__logger.error(str(e))
+            self.__state.set_state(1, str(e))
+            self.__logger.error(traceback.format_exc())
             return 1
             
         finally:
             self.cleanup()
 
 def main():
-    controller = TrainingController()
+    controller = TrainingController(30)
     exit_code = controller.run()
     sys.exit(exit_code)
 
