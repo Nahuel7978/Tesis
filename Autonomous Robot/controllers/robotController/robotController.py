@@ -28,109 +28,109 @@ class RobotController(RobotSupervisorEnv):
         self.act_space= act_space
 
         #---Atributos.
-        self.speedMax = 8
-        self.speed = 5
-        self.speedMin = 2
+        self.__speedMax = 8
+        self.__speed = 5
+        self.__speedMin = 2
 
-        self.distAvanceMax = 3
-        self.distAvanceMedio = 2
-        self.distAvanceMin = 1
+        self.__distAvanceMax = 3
+        self.__distAvanceMedio = 2
+        self.__distAvanceMin = 1
 
-        self.pasos = 200
+        self.__pasos = 200
 
-        self.ant_val_pos = [0.0, 0.0]  # [izq, der]
-        self.ant_dist_senial = None
-        self.ant_angulo = None
+        self.__ant_val_pos = [0.0, 0.0]  # [izq, der]
+        self.__ant_dist_senial = None
+        self.__ant_angulo = None
         
         #---Robot timestep.
-        self.robotTimestep = self.timestep
+        self.__robotTimestep = self.timestep
 
         #---Activación de moteres.
-        self.ruedaDerechaSuperior = self.getDevice("fr_wheel_joint")
-        self.ruedaDerechaInferior = self.getDevice("rr_wheel_joint")
-        self.ruedaIzquierdaSuperior = self.getDevice("fl_wheel_joint")
-        self.ruedaIzquierdaInferior = self.getDevice("rl_wheel_joint")
+        self.__ruedaDerechaSuperior = self.getDevice("fr_wheel_joint")
+        self.__ruedaDerechaInferior = self.getDevice("rr_wheel_joint")
+        self.__ruedaIzquierdaSuperior = self.getDevice("fl_wheel_joint")
+        self.__ruedaIzquierdaInferior = self.getDevice("rl_wheel_joint")
 
-        self.ruedaDerechaSuperior.setPosition(float('inf'))
-        self.ruedaDerechaInferior.setPosition(float('inf'))
-        self.ruedaIzquierdaInferior.setPosition(float('inf'))
-        self.ruedaIzquierdaSuperior.setPosition(float('inf'))
+        self.__ruedaDerechaSuperior.setPosition(float('inf'))
+        self.__ruedaDerechaInferior.setPosition(float('inf'))
+        self.__ruedaIzquierdaInferior.setPosition(float('inf'))
+        self.__ruedaIzquierdaSuperior.setPosition(float('inf'))
 
-        #---Activación de giroscopio.
-        self.giroscopio = self.getDevice("imu gyro")
-        self.giroscopio.enable(self.robotTimestep)
+        #---Activación de __giroscopio.
+        self.__giroscopio = self.getDevice("imu gyro")
+        self.__giroscopio.enable(self.__robotTimestep)
 
-        #---Activación de acelerometro.
-        self.acelerometro = self.getDevice("imu accelerometer")
-        self.acelerometro.enable(self.robotTimestep)
+        #---Activación de __acelerometro.
+        self.__acelerometro = self.getDevice("imu accelerometer")
+        self.__acelerometro.enable(self.__robotTimestep)
 
-        #---Activación del lidar-
-        self.lidar = self.getDevice("laser")
-        self.lidar.enable(self.robotTimestep)
-        self.lidar.enablePointCloud()
+        #---Activación del __lidar-
+        self.__lidar = self.getDevice("laser")
+        self.__lidar.enable(self.__robotTimestep)
+        self.__lidar.enablePointCloud()
 
-        self.front_range = 25
-        self.back_range = 25
-        self.error_range = 3
+        self.__front_range = 25
+        self.__back_range = 25
+        self.__error_range = 3
 
         #---Activación de Sensores infrarojos.
-        self.frontLeftSensor = self.getDevice("fl_range")
-        self.frontRightSensor = self.getDevice("fr_range")
-        self.rearLeftSensor = self.getDevice("rl_range")
-        self.rearRightSensor = self.getDevice("rr_range")
+        self.__frontLeftSensor = self.getDevice("fl_range")
+        self.__frontRightSensor = self.getDevice("fr_range")
+        self.__rearLeftSensor = self.getDevice("rl_range")
+        self.__rearRightSensor = self.getDevice("rr_range")
         
-        self.frontLeftSensor.enable(self.robotTimestep)
-        self.frontRightSensor.enable(self.robotTimestep)
-        self.rearLeftSensor.enable(self.robotTimestep)
-        self.rearRightSensor.enable(self.robotTimestep)
+        self.__frontLeftSensor.enable(self.__robotTimestep)
+        self.__frontRightSensor.enable(self.__robotTimestep)
+        self.__rearLeftSensor.enable(self.__robotTimestep)
+        self.__rearRightSensor.enable(self.__robotTimestep)
 
-        self.limiteSensor = 2.0
-        self.minDistancia = 0.3
+        self.__limiteSensor = 2.0
+        self.__minDistancia = 0.3
 
         #---Activación de sensores de posición.
-        self.frontLeftPositionSensor = self.getDevice("front left wheel motor sensor")
-        self.frontRightPositionSensor = self.getDevice("front right wheel motor sensor")
-        self.rearLeftPositionSensor = self.getDevice("rear left wheel motor sensor")
-        self.rearRightPositionSensor = self.getDevice("rear right wheel motor sensor")
+        self.__frontLeftPositionSensor = self.getDevice("front left wheel motor sensor")
+        self.__frontRightPositionSensor = self.getDevice("front right wheel motor sensor")
+        self.__rearLeftPositionSensor = self.getDevice("rear left wheel motor sensor")
+        self.__rearRightPositionSensor = self.getDevice("rear right wheel motor sensor")
         
-        self.frontLeftPositionSensor.enable(self.robotTimestep)
-        self.frontRightPositionSensor.enable(self.robotTimestep)
-        self.rearLeftPositionSensor.enable(self.robotTimestep)
-        self.rearRightPositionSensor.enable(self.robotTimestep)
+        self.__frontLeftPositionSensor.enable(self.__robotTimestep)
+        self.__frontRightPositionSensor.enable(self.__robotTimestep)
+        self.__rearLeftPositionSensor.enable(self.__robotTimestep)
+        self.__rearRightPositionSensor.enable(self.__robotTimestep)
 
-        self.anteriorValorPositionSensor = [0,0,0,0]
+        self.__anteriorValorPositionSensor = [0,0,0,0]
 
-        self.distanciaRecorrida = 0
+        self.__distanciaRecorrida = 0
 
         #---Activación Receiver
-        self.receptor = self.getDevice('Receiver')
-        self.receptor.enable(self.robotTimestep)
+        self.__receptor = self.getDevice('Receiver')
+        self.__receptor.enable(self.__robotTimestep)
 
-        self.direccionUltimaSenial = None
-        self.distanciaUltimaSenial = None
+        self.__direccionUltimaSenial = None
+        self.__distanciaUltimaSenial = None
 
         #---Atributos propios de las ruedas.
-        self.radioRueda = 0.0425
-        self.encoderUnit = (2*np.pi*self.radioRueda)/6.28 
+        self.__radioRueda = 0.0425
+        self.__encoderUnit = (2*np.pi*self.__radioRueda)/6.28 
         
         #--- Parámetros de recompensa
-        self.recompensa_maxima = 5
-        self.recompensa_minima = 1
-        self.penalizacion_maxima = -5
-        self.penalizacion_minima = 1
-        self.tolerancia_movimiento = 1
+        self.__recompensa_maxima = 5
+        self.__recompensa_minima = 1
+        self.__penalizacion_maxima = -5
+        self.__penalizacion_minima = 1
+        self.__tolerancia_movimiento = 1
 
         #--- Parámetros de reseteo.
         name="principal_robot"
-        self.robot_node = self.getFromDef(name)
-        if self.robot_node is None:
+        self.__robot_node = self.getFromDef(name)
+        if self.__robot_node is None:
             raise RuntimeError("No se encontró el robot con DEF=",name)
-        self.translation = self.robot_node.getField("translation")
-        self.rotation = self.robot_node.getField("rotation")
-        self.startPoints = []
-        self.startRotation = []
-        self.startPoints.append(self.currentLocation())
-        self.startRotation.append(self.currentRotation())
+        self.__translation = self.__robot_node.getField("translation")
+        self.__rotation = self.__robot_node.getField("rotation")
+        self.__startPoints = []
+        self.__startRotation = []
+        self.__startPoints.append(self.currentLocation())
+        self.__startRotation.append(self.currentRotation())
         
         #---
         self.detener()
@@ -139,7 +139,7 @@ class RobotController(RobotSupervisorEnv):
 #-----Deepbots-----
 
     def get_observations(self):
-        lidar_data = np.array(self.lidar.getRangeImage())
+        lidar_data = np.array(self.__lidar.getRangeImage())
         lidar_data[np.isinf(lidar_data)] = 10
         lidar_data[np.isnan(lidar_data)] = 0
         signal_strength = 0.0
@@ -150,8 +150,8 @@ class RobotController(RobotSupervisorEnv):
             distance = self.distanciaSenial()
             angle = self.anguloUltimaSenial()
             if not self.is_done():
-                self.startPoints.append(self.currentLocation())
-                self.startRotation.append(self.currentRotation())
+                self.__startPoints.append(self.currentLocation())
+                self.__startRotation.append(self.currentRotation())
         observations = lidar_data.tolist() + [signal_strength,distance,angle]
         return np.array(observations, dtype=np.float32)
 
@@ -159,19 +159,19 @@ class RobotController(RobotSupervisorEnv):
         return np.zeros(self.obs_space, dtype=np.float32)
 
     def get_reward(self,action):
-        act_val_pos_der = round(self.frontRightPositionSensor.getValue(), 1)
-        act_val_pos_izq = round(self.frontLeftPositionSensor.getValue(), 1)
+        act_val_pos_der = round(self.__frontRightPositionSensor.getValue(), 1)
+        act_val_pos_izq = round(self.__frontLeftPositionSensor.getValue(), 1)
         senal = self.haySenial()
         recompensa = 0
 
         # 1. VERIFICAR MOVIMIENTO
-        movimiento = not ((self.ant_val_pos[0] + self.tolerancia_movimiento > act_val_pos_izq) and 
-                         (self.ant_val_pos[1] + self.tolerancia_movimiento > act_val_pos_der))
+        movimiento = not ((self.__ant_val_pos[0] + self.__tolerancia_movimiento > act_val_pos_izq) and 
+                         (self.__ant_val_pos[1] + self.__tolerancia_movimiento > act_val_pos_der))
         if not movimiento:
-            print("|-> Recompensa (sin movimiento): ", self.penalizacion_maxima)
-            self.ant_val_pos[0] = act_val_pos_izq
-            self.ant_val_pos[1] = act_val_pos_der
-            return self.penalizacion_maxima
+            print("|-> Recompensa (sin movimiento): ", self.__penalizacion_maxima)
+            self.__ant_val_pos[0] = act_val_pos_izq
+            self.__ant_val_pos[1] = act_val_pos_der
+            return self.__penalizacion_maxima
         
         # 2. SI HAY SEÑAL
         if (senal):
@@ -179,22 +179,22 @@ class RobotController(RobotSupervisorEnv):
             
             # RECOMPENSA MÁXIMA: Meta alcanzada
             if self.estimuloEncontrado(tolerancia):
-                print("|-> Recompensa (meta alcanzada): ", self.recompensa_maxima)
-                self.ant_val_pos[0] = act_val_pos_izq
-                self.ant_val_pos[1] = act_val_pos_der
-                return self.recompensa_maxima
+                print("|-> Recompensa (meta alcanzada): ", self.__recompensa_maxima)
+                self.__ant_val_pos[0] = act_val_pos_izq
+                self.__ant_val_pos[1] = act_val_pos_der
+                return self.__recompensa_maxima
             
             # Datos actuales
             act_dist_senial = self.distanciaSenial()
             act_angulo = self.anguloUltimaSenial()
             
             # 2.1. Recompensa por acercarse
-            if self.ant_dist_senial is not None:
-                delta_distancia = self.ant_dist_senial - act_dist_senial
+            if self.__ant_dist_senial is not None:
+                delta_distancia = self.__ant_dist_senial - act_dist_senial
                 if delta_distancia > 0:  # Se acercó
-                    recompensa += self.recompensa_minima * (1 + delta_distancia)
+                    recompensa += self.__recompensa_minima * (1 + delta_distancia)
                 else:  # Se alejó
-                    recompensa += self.penalizacion_minima * (1 - delta_distancia)
+                    recompensa += self.__penalizacion_minima * (1 - delta_distancia)
 
             # 2.2. Recompensa por orientación correcta
             orientacion_robot = self.get_orientacion_robot()      
@@ -215,20 +215,20 @@ class RobotController(RobotSupervisorEnv):
                 recompensa -= 0.1
 
             # 2.3. Recompensa por mejorar orientación
-            if self.ant_angulo is not None:
-                delta_orientacion = abs(self.ant_angulo - act_angulo)
+            if self.__ant_angulo is not None:
+                delta_orientacion = abs(self.__ant_angulo - act_angulo)
                 if delta_orientacion < 0.1:  # Se mantiene bien orientado
                     recompensa += 0.05
             
             # Actualizar estado anterior para la próxima iteración
-            self.ant_dist_senial = act_dist_senial
-            self.ant_angulo = act_angulo
+            self.__ant_dist_senial = act_dist_senial
+            self.__ant_angulo = act_angulo
         # 3. SIN SEÑAL
         else:
-            recompensa = self.penalizacion_minima * 0.5
+            recompensa = self.__penalizacion_minima * 0.5
 
-        self.ant_val_pos[0] = act_val_pos_izq
-        self.ant_val_pos[1] = act_val_pos_der
+        self.__ant_val_pos[0] = act_val_pos_izq
+        self.__ant_val_pos[1] = act_val_pos_der
         print("|-> Recompensa: ", recompensa)
         return recompensa
     
@@ -259,9 +259,9 @@ class RobotController(RobotSupervisorEnv):
 
     def reset(self):    
         if(self.is_done()==True):
-            index = np.random.randint(0,len(self.startPoints))
-            self.translation.setSFVec3f(self.startPoints[index])
-            self.rotation.setSFRotation(self.startRotation[index])
+            index = np.random.randint(0,len(self.__startPoints))
+            self.__translation.setSFVec3f(self.__startPoints[index])
+            self.__rotation.setSFRotation(self.__startRotation[index])
             self.done='False'
             self.default()
             self.simulationResetPhysics()
@@ -283,7 +283,7 @@ class RobotController(RobotSupervisorEnv):
         """
         ##self.updateTimestep()
         print("-----> Ir_estimulo")
-        velocidad = self.speedMax
+        velocidad = self.__speedMax
         finaliza = False
         giro = False
 
@@ -309,7 +309,7 @@ class RobotController(RobotSupervisorEnv):
         giro = False
         finaliza = False
         #print("obstaculo: ", obstaculo)
-        if((obstaculo != None)or((self.get_frontLeftSensor()<self.minDistancia)or(self.get_frontRightSensor()<self.minDistancia))):
+        if((obstaculo != None)or((self.get_frontLeftSensor()<self.__minDistancia)or(self.get_frontRightSensor()<self.__minDistancia))):
             self.retroceder(0.05,2)
             
             if(self.get_ultimaSenial()!=None):
@@ -325,7 +325,7 @@ class RobotController(RobotSupervisorEnv):
                 finaliza = False
 
         self.vaciarCola()
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         return finaliza
 
     def explorar(self):
@@ -334,9 +334,9 @@ class RobotController(RobotSupervisorEnv):
             - Si gira, lo hace en base a la ultima señal detectada.
         """
         print("--> Explorar")
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         self.vaciarCola()
-        velocidad = self.speedMax
+        velocidad = self.__speedMax
         distancia = 1
 
         ##if (not self.haySenial()):
@@ -351,13 +351,13 @@ class RobotController(RobotSupervisorEnv):
             while((not giro)and(i<=1)):
                 i +=1
                 if(gDeterminado==1):
-                    #self.robot.step(self.robotTimestep)
+                    #self.robot.step(self.__robotTimestep)
                     giro = self.giroAleatorioIzquierda()
                    
                     if(not giro):
                         gDeterminado = 2
                 else:
-                    #self.robot.step(self.robotTimestep)
+                    #self.robot.step(self.__robotTimestep)
                     giro = self.giroAleatorioDerecha()
 
                     if(not giro):
@@ -380,7 +380,7 @@ class RobotController(RobotSupervisorEnv):
             Permite avanzar al robot. 
 
             Activa los motores de las ruedas a una determinada velocidad y los desactiva luego de una determinada distancia.
-            Avanza siempre y cuando no detecte un obstaculo en frente con el lidar.
+            Avanza siempre y cuando no detecte un obstaculo en frente con el __lidar.
 
             Args:
                 distancia (float): [Distancia]
@@ -394,26 +394,26 @@ class RobotController(RobotSupervisorEnv):
         dist[1] = 0
 
         
-        fls = self.frontLeftSensor.getValue()
-        frs = self.frontRightSensor.getValue()
+        fls = self.__frontLeftSensor.getValue()
+        frs = self.__frontRightSensor.getValue()
         
-        if(fls>self.minDistancia and frs>self.minDistancia):
+        if(fls>self.__minDistancia and frs>self.__minDistancia):
             dist_ant=self.metrosRecorridos()
             p = 0
 
             while ((self.getObstaculoAlFrente()==None)and
                 (dist[0]<distancia or dist[1]<distancia)):
                 dist =  self.metrosRecorridos()
-                self.ruedaDerechaSuperior.setVelocity(velocidad)
-                self.ruedaDerechaInferior.setVelocity(velocidad)
-                self.ruedaIzquierdaInferior.setVelocity(velocidad)
-                self.ruedaIzquierdaSuperior.setVelocity(velocidad)
+                self.__ruedaDerechaSuperior.setVelocity(velocidad)
+                self.__ruedaDerechaInferior.setVelocity(velocidad)
+                self.__ruedaIzquierdaInferior.setVelocity(velocidad)
+                self.__ruedaIzquierdaSuperior.setVelocity(velocidad)
                 self.updateTimestep()
                 
                 if(dist==dist_ant):
                     p+=1
-                if(p == self.pasos):
-                    #print("pasos: ",p < self.pasos," dist:",dist)
+                if(p == self.__pasos):
+                    #print("__pasos: ",p < self.__pasos," dist:",dist)
                     break;
                 
                 dist_ant = dist
@@ -442,32 +442,32 @@ class RobotController(RobotSupervisorEnv):
         #print("  ⬇ Retroceder")
         dist = [0, 0]
         distancia = -1*distancia
-        #self.robot.step(self.robotTimestep)
-        self.anteriorValorPositionSensor[2] = self.rearLeftPositionSensor.getValue()
-        self.anteriorValorPositionSensor[3] = self.rearRightPositionSensor.getValue()
+        #self.robot.step(self.__robotTimestep)
+        self.__anteriorValorPositionSensor[2] = self.__rearLeftPositionSensor.getValue()
+        self.__anteriorValorPositionSensor[3] = self.__rearRightPositionSensor.getValue()
 
 
-        rls = self.rearLeftSensor.getValue()
-        rrs = self.rearRightSensor.getValue()
+        rls = self.__rearLeftSensor.getValue()
+        rrs = self.__rearRightSensor.getValue()
         dist[0] = 0
         dist[1] = 0
         
-        if(rls>(self.minDistancia-0.2) and rrs>(self.minDistancia-0.2)):
-            pasos= 0
+        if(rls>(self.__minDistancia-0.2) and rrs>(self.__minDistancia-0.2)):
+            __pasos= 0
             dist_ant = self.metrosRecorridosHaciaAtras()
             while ((dist[0]>distancia or dist[1]>distancia)):
                 
                 #dist =  self.metrosRecorridos()
                 dist = self.metrosRecorridosHaciaAtras()
-                self.ruedaDerechaSuperior.setVelocity(-velocidad)
-                self.ruedaDerechaInferior.setVelocity(-velocidad)
-                self.ruedaIzquierdaInferior.setVelocity(-velocidad)
-                self.ruedaIzquierdaSuperior.setVelocity(-velocidad)
+                self.__ruedaDerechaSuperior.setVelocity(-velocidad)
+                self.__ruedaDerechaInferior.setVelocity(-velocidad)
+                self.__ruedaIzquierdaInferior.setVelocity(-velocidad)
+                self.__ruedaIzquierdaSuperior.setVelocity(-velocidad)
                 self.updateTimestep()
                 if(dist==dist_ant):
-                    pasos+=1
+                    __pasos+=1
 
-                if(pasos == self.pasos):
+                if(__pasos == self.__pasos):
                     break;
                 
                 dist_ant = dist
@@ -498,31 +498,31 @@ class RobotController(RobotSupervisorEnv):
         ang_z = 0
         giro = False
 
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         obstaculo, min= self.getObstaculoADerecha(10)
-        frs = self.frontLeftSensor.getValue()
-        #print(min,">=", " and ", frs,">=",self.minDistancia-0.12)
+        frs = self.__frontLeftSensor.getValue()
+        #print(min,">=", " and ", frs,">=",self.__minDistancia-0.12)
         #print("angulo=",angulo)
-        if((obstaculo==None or min>=self.minDistancia-0.12) and frs>=self.minDistancia-0.12):
+        if((obstaculo==None or min>=self.__minDistancia-0.12) and frs>=self.__minDistancia-0.12):
             giro = True
-            ant_gyroZ =self.giroscopio.getValues()[2]
-            pasos=0
+            ant_gyroZ =self.__giroscopio.getValues()[2]
+            __pasos=0
             
-            while ((ang_z>(angulo)) and frs>=self.minDistancia-0.12):
+            while ((ang_z>(angulo)) and frs>=self.__minDistancia-0.12):
                 
-                gyroZ =self.giroscopio.getValues()[2]
-                ang_z=ang_z+(gyroZ*self.robotTimestep*0.001)
+                gyroZ =self.__giroscopio.getValues()[2]
+                ang_z=ang_z+(gyroZ*self.__robotTimestep*0.001)
                 
-                self.ruedaDerechaSuperior.setVelocity(0.0)
-                self.ruedaDerechaInferior.setVelocity(0.0)
-                self.ruedaIzquierdaInferior.setVelocity(velocidad)
-                self.ruedaIzquierdaSuperior.setVelocity(velocidad)
+                self.__ruedaDerechaSuperior.setVelocity(0.0)
+                self.__ruedaDerechaInferior.setVelocity(0.0)
+                self.__ruedaIzquierdaInferior.setVelocity(velocidad)
+                self.__ruedaIzquierdaSuperior.setVelocity(velocidad)
                 self.updateTimestep()
-                frs = self.frontLeftSensor.getValue()
+                frs = self.__frontLeftSensor.getValue()
                 
                 if(gyroZ==ant_gyroZ):
-                    pasos+=1
-                if(pasos == self.pasos):
+                    __pasos+=1
+                if(__pasos == self.__pasos):
                     giro=False
                     break;
                 
@@ -550,32 +550,32 @@ class RobotController(RobotSupervisorEnv):
         ang_z = 0
         giro = False
 
-        ##self.robot.step(self.robotTimestep)        
+        ##self.robot.step(self.__robotTimestep)        
         obstaculo, min = self.getObstaculoAIzquierda(350)
-        fls = self.frontRightSensor.getValue()
+        fls = self.__frontRightSensor.getValue()
 
-        if((obstaculo==None or min>=self.minDistancia-0.12)and fls>=self.minDistancia-0.12):
+        if((obstaculo==None or min>=self.__minDistancia-0.12)and fls>=self.__minDistancia-0.12):
             
             giro = True
-            ant_gyroZ =self.giroscopio.getValues()[2]
-            pasos=0
+            ant_gyroZ =self.__giroscopio.getValues()[2]
+            __pasos=0
 
-            while ((ang_z<(angulo))and(fls>=self.minDistancia-0.12)): #0.5*np.pi
+            while ((ang_z<(angulo))and(fls>=self.__minDistancia-0.12)): #0.5*np.pi
                 
-                gyroZ =self.giroscopio.getValues()[2]
-                ang_z=ang_z+(gyroZ*self.robotTimestep*0.001)
+                gyroZ =self.__giroscopio.getValues()[2]
+                ang_z=ang_z+(gyroZ*self.__robotTimestep*0.001)
             
-                self.ruedaDerechaSuperior.setVelocity(velocidad)
-                self.ruedaDerechaInferior.setVelocity(velocidad)
-                self.ruedaIzquierdaInferior.setVelocity(0.0)
-                self.ruedaIzquierdaSuperior.setVelocity(0.0)
+                self.__ruedaDerechaSuperior.setVelocity(velocidad)
+                self.__ruedaDerechaInferior.setVelocity(velocidad)
+                self.__ruedaIzquierdaInferior.setVelocity(0.0)
+                self.__ruedaIzquierdaSuperior.setVelocity(0.0)
                 self.updateTimestep()
-                fls = self.frontRightSensor.getValue()
+                fls = self.__frontRightSensor.getValue()
 
                 if(gyroZ==ant_gyroZ):
-                    pasos+=1
+                    __pasos+=1
                     
-                if(pasos == self.pasos):
+                if(__pasos == self.__pasos):
                     giro=False
                     break;
                 ant_gyroZ = gyroZ
@@ -593,19 +593,19 @@ class RobotController(RobotSupervisorEnv):
             Luego de detenerse actualiza la señal.
         """
 
-        #self.robot.step(self.robotTimestep) 
+        #self.robot.step(self.__robotTimestep) 
         
-        self.ruedaDerechaSuperior.setVelocity(0)
-        self.ruedaDerechaInferior.setVelocity(0)
-        self.ruedaIzquierdaInferior.setVelocity(0)
-        self.ruedaIzquierdaSuperior.setVelocity(0)
+        self.__ruedaDerechaSuperior.setVelocity(0)
+        self.__ruedaDerechaInferior.setVelocity(0)
+        self.__ruedaIzquierdaInferior.setVelocity(0)
+        self.__ruedaIzquierdaSuperior.setVelocity(0)
 
         self.updateTimestep()
 
-        self.anteriorValorPositionSensor[0] = self.frontLeftPositionSensor.getValue()
-        self.anteriorValorPositionSensor[1] = self.frontRightPositionSensor.getValue()
-        self.anteriorValorPositionSensor[2] = self.rearLeftPositionSensor.getValue()
-        self.anteriorValorPositionSensor[3] = self.rearRightPositionSensor.getValue()
+        self.__anteriorValorPositionSensor[0] = self.__frontLeftPositionSensor.getValue()
+        self.__anteriorValorPositionSensor[1] = self.__frontRightPositionSensor.getValue()
+        self.__anteriorValorPositionSensor[2] = self.__rearLeftPositionSensor.getValue()
+        self.__anteriorValorPositionSensor[3] = self.__rearRightPositionSensor.getValue()
 
         self.actualizarSenial();
 #----------
@@ -618,11 +618,11 @@ class RobotController(RobotSupervisorEnv):
 
             Retorna True si el robot pudo avanzar y False en caso contrario.
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         obstaculo=self.getObstaculoAlFrente(4)
 
-        distancia = self.distAvanceMax;
-        velocidad = self.speedMax
+        distancia = self.__distAvanceMax;
+        velocidad = self.__speedMax
         
         avance = False
 
@@ -630,7 +630,7 @@ class RobotController(RobotSupervisorEnv):
             distancia=obstaculo[2]
             #print(distancia)
         
-        avance = self.avanzar(distancia-self.minDistancia, velocidad)
+        avance = self.avanzar(distancia-self.__minDistancia, velocidad)
 
         return avance
 
@@ -640,14 +640,14 @@ class RobotController(RobotSupervisorEnv):
 
             Retorna True si el robot pudo avanzar y False en caso contrario.
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         self.updateTimestep()
         avance = False
 
         if (self.haySenial()):
             distancia = self.distanciaSenial()
             #print(distancia)
-            velocidad = self.speedMax
+            velocidad = self.__speedMax
             avance = self.avanzar(distancia, velocidad)
         
         return avance
@@ -658,13 +658,13 @@ class RobotController(RobotSupervisorEnv):
 
             Retorna True si el robot pudo avanzar y False en caso contrario. 
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
 
         avance = False
 
         if (self.get_ultimaSenial()!=None):
             distancia = self.get_distanciaUltimaSenial()
-            velocidad = self.speed
+            velocidad = self.__speed
             
             avance = self.avanzar(distancia, velocidad)
         
@@ -694,23 +694,23 @@ class RobotController(RobotSupervisorEnv):
         if(distanciaDer<distanciaIzq):
             index, distanciaDer = self.getObstaculoADerecha(10, 1)
             
-            while((index!=None)and(dist[0]<self.distAvanceMax+4 and dist[1]<self.distAvanceMax+4)
-                    and(p<self.pasos)and(ang_z<(np.pi*0.5))and(self.getObstaculoAlFrente(0.05)==None)):
-                #self.robot.step(self.robotTimestep)
+            while((index!=None)and(dist[0]<self.__distAvanceMax+4 and dist[1]<self.__distAvanceMax+4)
+                    and(p<self.__pasos)and(ang_z<(np.pi*0.5))and(self.getObstaculoAlFrente(0.05)==None)):
+                #self.robot.step(self.__robotTimestep)
 
                 dist =  self.metrosRecorridos()
-                gyroZ =self.giroscopio.getValues()[2]
-                ang_z=ang_z+(gyroZ*self.robotTimestep*0.001)
+                gyroZ =self.__giroscopio.getValues()[2]
+                ang_z=ang_z+(gyroZ*self.__robotTimestep*0.001)
 
-                self.ruedaDerechaSuperior.setVelocity(self.speedMax+plus_vel)
-                self.ruedaDerechaInferior.setVelocity(self.speedMax+plus_vel)
-                self.ruedaIzquierdaInferior.setVelocity(self.speedMax-plus_vel)
-                self.ruedaIzquierdaSuperior.setVelocity(self.speedMax-plus_vel)
+                self.__ruedaDerechaSuperior.setVelocity(self.__speedMax+plus_vel)
+                self.__ruedaDerechaInferior.setVelocity(self.__speedMax+plus_vel)
+                self.__ruedaIzquierdaInferior.setVelocity(self.__speedMax-plus_vel)
+                self.__ruedaIzquierdaSuperior.setVelocity(self.__speedMax-plus_vel)
 
                 self.updateTimestep()
                 if(dist==recorrido):
                     p+=1
-                if((p == self.pasos)or(self.estimuloEncontrado(0.5))):
+                if((p == self.__pasos)or(self.estimuloEncontrado(0.5))):
                     break;
                 
                 recorrido = dist
@@ -723,24 +723,24 @@ class RobotController(RobotSupervisorEnv):
 
         else:
             index, distanciaIzq = self.getObstaculoAIzquierda(390,1)
-            while((index!=None)and(dist[0]<self.distAvanceMax+4 and dist[1]<self.distAvanceMax+4)
-                    and(p<self.pasos)and(ang_z<(np.pi*0.5))and(self.getObstaculoAlFrente(0.05)==None)):
-                #self.robot.step(self.robotTimestep)
+            while((index!=None)and(dist[0]<self.__distAvanceMax+4 and dist[1]<self.__distAvanceMax+4)
+                    and(p<self.__pasos)and(ang_z<(np.pi*0.5))and(self.getObstaculoAlFrente(0.05)==None)):
+                #self.robot.step(self.__robotTimestep)
 
                 dist =  self.metrosRecorridos()
-                gyroZ =self.giroscopio.getValues()[2]
-                ang_z=ang_z+(gyroZ*self.robotTimestep*0.001)
+                gyroZ =self.__giroscopio.getValues()[2]
+                ang_z=ang_z+(gyroZ*self.__robotTimestep*0.001)
 
-                self.ruedaDerechaSuperior.setVelocity(self.speedMax-plus_vel)
-                self.ruedaDerechaInferior.setVelocity(self.speedMax-plus_vel)
-                self.ruedaIzquierdaInferior.setVelocity(self.speedMax+plus_vel)
-                self.ruedaIzquierdaSuperior.setVelocity(self.speedMax+plus_vel)
+                self.__ruedaDerechaSuperior.setVelocity(self.__speedMax-plus_vel)
+                self.__ruedaDerechaInferior.setVelocity(self.__speedMax-plus_vel)
+                self.__ruedaIzquierdaInferior.setVelocity(self.__speedMax+plus_vel)
+                self.__ruedaIzquierdaSuperior.setVelocity(self.__speedMax+plus_vel)
 
                 self.updateTimestep()
                 if(dist==recorrido):
                     p+=1
 
-                if((p == self.pasos)or(self.estimuloEncontrado(0.5))):
+                if((p == self.__pasos)or(self.estimuloEncontrado(0.5))):
                     break;
                 
                 recorrido = dist
@@ -752,7 +752,7 @@ class RobotController(RobotSupervisorEnv):
                     plus_vel = 0
 
         #self.detener()
-        #print("pasos: ",p < self.pasos," recorrido:",recorrido," ang_z:",ang_z<(np.pi*0.5)," index:",index)
+        #print("__pasos: ",p < self.__pasos," recorrido:",recorrido," ang_z:",ang_z<(np.pi*0.5)," index:",index)
         return ((recorrido[0]>0) or (recorrido[1]>0))
 
     def retrocederObstaculo(self):
@@ -761,11 +761,11 @@ class RobotController(RobotSupervisorEnv):
 
             Retorna True si el robot pudo retroceder y False en caso contrario.
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         obstaculo=self.getObstaculoAtras(4)
 
-        distancia = self.distAvanceMax;
-        velocidad = self.speedMax
+        distancia = self.__distAvanceMax;
+        velocidad = self.__speedMax
         
         retroceso = False
 
@@ -776,7 +776,7 @@ class RobotController(RobotSupervisorEnv):
         retroceso = self.retroceder(distancia, velocidad)
         return retroceso
 
-    def giroParaleloObstaculo(self, pasos=0):
+    def giroParaleloObstaculo(self, __pasos=0):
         """
             En el caso de que se detecte un obstaculo por el frente del robot, se procedera a girar paralelamente
             al mismo.
@@ -784,13 +784,13 @@ class RobotController(RobotSupervisorEnv):
             Retorna True si se concreto el giro, y False en caso contrario.
         """
         giro = False
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         ##
-        #print("Giro paraleo obstaculo. Pasos:",pasos)
+        #print("Giro paraleo obstaculo. Pasos:",__pasos)
         obstaculo = self.getObstaculoAlFrente(0.2)
-        if((obstaculo==None)and((self.get_frontLeftSensor()<self.minDistancia)or(self.get_frontRightSensor()<self.minDistancia))):
+        if((obstaculo==None)and((self.get_frontLeftSensor()<self.__minDistancia)or(self.get_frontRightSensor()<self.__minDistancia))):
             self.retroceder(0.1,2.0)
-            #self.robot.step(self.robotTimestep)
+            #self.robot.step(self.__robotTimestep)
             obstaculo = self.getObstaculoAlFrente(0.2)
 
         if(obstaculo!= None):
@@ -799,8 +799,8 @@ class RobotController(RobotSupervisorEnv):
 
             elif(obstaculo[1]=="right"):
                 obst, min = self.getObstaculoAIzquierda(350)
-                fls = self.frontLeftSensor.getValue()
-                cond = ((obst==None or min>=self.minDistancia-0.12) and (fls>=self.minDistancia-0.12))
+                fls = self.__frontLeftSensor.getValue()
+                cond = ((obst==None or min>=self.__minDistancia-0.12) and (fls>=self.__minDistancia-0.12))
 
                 if(cond):
                     giro= self.giroIzquierdaParaleloObstaculo()
@@ -810,8 +810,8 @@ class RobotController(RobotSupervisorEnv):
                     giro = self.giroDerechaParaleloObstaculo()
             else: 
                 obst, min= self.getObstaculoADerecha(40)
-                frs = self.frontRightSensor.getValue()
-                cond = ((obst==None or min>=self.minDistancia-0.12) and (frs>=self.minDistancia-0.12))
+                frs = self.__frontRightSensor.getValue()
+                cond = ((obst==None or min>=self.__minDistancia-0.12) and (frs>=self.__minDistancia-0.12))
 
                 if(cond):
                     giro= self.giroDerechaParaleloObstaculo()
@@ -831,9 +831,9 @@ class RobotController(RobotSupervisorEnv):
         """
         #print("Giro paraleo obstaculo guiado")
         obstaculo = self.getObstaculoAlFrente(0.2)
-        if((obstaculo==None)and((self.get_frontLeftSensor()<self.minDistancia)or(self.get_frontRightSensor()<self.minDistancia))):
+        if((obstaculo==None)and((self.get_frontLeftSensor()<self.__minDistancia)or(self.get_frontRightSensor()<self.__minDistancia))):
             self.retroceder(0.1,2.0)
-            #self.robot.step(self.robotTimestep)
+            #self.robot.step(self.__robotTimestep)
             obstaculo = self.getObstaculoAlFrente(0.2)
 
         giro = False
@@ -856,19 +856,19 @@ class RobotController(RobotSupervisorEnv):
             direccion = self.orientacionUltimaSenial()    
             
             if ((direccion==1)and(not giro)):
-                if(obstaculo[2]<self.minDistancia-0.2):
+                if(obstaculo[2]<self.__minDistancia-0.2):
                     self.retroceder(0.1,2)
                 giro = self.giroIzquierdaParaleloObstaculo()
             
             elif((direccion == 2)and(not giro)):
-                if(obstaculo[2]<self.minDistancia-0.2):
+                if(obstaculo[2]<self.__minDistancia-0.2):
                     self.retroceder(0.1,2)
                 giro = self.giroDerechaParaleloObstaculo()
             
         return giro
 
     def giroIzquierdaParaleloObstaculo(self):
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         ##
         #print("giro a izquierda Paralelo Obsts")
         obstaculo = False
@@ -878,36 +878,36 @@ class RobotController(RobotSupervisorEnv):
         obstaculoLidar = self.getObstaculoAlFrente(0.2)
         #print(indice," - min:",min)
         if(obstaculoLidar!=None):
-            obstaculo = obstaculoLidar[2]<self.minDistancia+0.2
+            obstaculo = obstaculoLidar[2]<self.__minDistancia+0.2
         else:
             fls = self.get_frontLeftSensor()
             frs = self.get_frontRightSensor()
-            obstaculo = ((fls<self.minDistancia+0.2)or(frs<self.minDistancia+0.2))
+            obstaculo = ((fls<self.__minDistancia+0.2)or(frs<self.__minDistancia+0.2))
        
         if(((indice == None)or(indice!=None and min>0.25))and(obstaculo)):
-            #self.robot.step(self.robotTimestep)
+            #self.robot.step(self.__robotTimestep)
             ang_z=0
-            ant_gyroZ =self.giroscopio.getValues()[2]
-            pasos=0
+            ant_gyroZ =self.__giroscopio.getValues()[2]
+            __pasos=0
             while(obstaculo):
-                gyroZ =self.giroscopio.getValues()[2]
-                ang_z=ang_z+(gyroZ*self.robotTimestep*0.001)
+                gyroZ =self.__giroscopio.getValues()[2]
+                ang_z=ang_z+(gyroZ*self.__robotTimestep*0.001)
 
-                self.ruedaDerechaSuperior.setVelocity(2)
-                self.ruedaDerechaInferior.setVelocity(2)
-                self.ruedaIzquierdaInferior.setVelocity(-1.5)
-                self.ruedaIzquierdaSuperior.setVelocity(-1.5)
+                self.__ruedaDerechaSuperior.setVelocity(2)
+                self.__ruedaDerechaInferior.setVelocity(2)
+                self.__ruedaIzquierdaInferior.setVelocity(-1.5)
+                self.__ruedaIzquierdaSuperior.setVelocity(-1.5)
 
-                #self.robot.step(self.robotTimestep)
+                #self.robot.step(self.__robotTimestep)
                 self.updateTimestep()
                 obstaculoLidar = self.getObstaculoAlFrente(0.3)
                 fls = self.get_frontLeftSensor()
                 frs = self.get_frontRightSensor()
-                obstaculo = (obstaculoLidar!=None)or(((fls<self.minDistancia+0.2)or(frs<self.minDistancia+0.2)))
+                obstaculo = (obstaculoLidar!=None)or(((fls<self.__minDistancia+0.2)or(frs<self.__minDistancia+0.2)))
                 
                 if(gyroZ==ant_gyroZ):
-                    pasos+=1
-                if(pasos == self.pasos):
+                    __pasos+=1
+                if(__pasos == self.__pasos):
                     finalizo=False
                     break;
                 ant_gyroZ = gyroZ
@@ -919,53 +919,53 @@ class RobotController(RobotSupervisorEnv):
     
     def giroDerechaParaleloObstaculo(self):
         """
-            Utiliza el lidar para detectar el obstaculo más cercano del lado izquierdo del robot y gira hasta 
+            Utiliza el __lidar para detectar el obstaculo más cercano del lado izquierdo del robot y gira hasta 
             ponerse paralelo al mismo.
 
             Retorna True si se concreto el giro, y False en caso contrario.
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         ##
         obstaculo = False
         finalizo=False
         indice, min= self.getObstaculoADerecha(64, 0.2)
         #print(indice," ",min)
         
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
 
         obstaculoLidar = self.getObstaculoAlFrente(0.2)
         if(obstaculoLidar!=None):
-            obstaculo = obstaculoLidar[2]<self.minDistancia+0.2
+            obstaculo = obstaculoLidar[2]<self.__minDistancia+0.2
         else:
             fls = self.get_frontLeftSensor()
             frs = self.get_frontRightSensor()
-            obstaculo = ((fls<self.minDistancia+0.2)or(frs<self.minDistancia+0.2))
+            obstaculo = ((fls<self.__minDistancia+0.2)or(frs<self.__minDistancia+0.2))
             
         
         if(((indice== None)or(indice!=None and min>0.25))and(obstaculo)):
-            #self.robot.step(self.robotTimestep)
-            ant_gyroZ =self.giroscopio.getValues()[2]
+            #self.robot.step(self.__robotTimestep)
+            ant_gyroZ =self.__giroscopio.getValues()[2]
             ang_z=0
-            pasos=0
+            __pasos=0
             while(obstaculo):
-                gyroZ =self.giroscopio.getValues()[2]
-                ang_z=ang_z+(gyroZ*self.robotTimestep*0.001)
+                gyroZ =self.__giroscopio.getValues()[2]
+                ang_z=ang_z+(gyroZ*self.__robotTimestep*0.001)
 
-                self.ruedaDerechaSuperior.setVelocity(-1.5)
-                self.ruedaDerechaInferior.setVelocity(-1.5)
-                self.ruedaIzquierdaInferior.setVelocity(2)
-                self.ruedaIzquierdaSuperior.setVelocity(2)
+                self.__ruedaDerechaSuperior.setVelocity(-1.5)
+                self.__ruedaDerechaInferior.setVelocity(-1.5)
+                self.__ruedaIzquierdaInferior.setVelocity(2)
+                self.__ruedaIzquierdaSuperior.setVelocity(2)
 
-                #self.robot.step(self.robotTimestep)
+                #self.robot.step(self.__robotTimestep)
                 self.updateTimestep()
                 obstaculoLidar = self.getObstaculoAlFrente(0.3)
                 fls = self.get_frontLeftSensor()
                 frs = self.get_frontRightSensor()
-                obstaculo = (obstaculoLidar!=None)or(((fls<self.minDistancia+0.2)or(frs<self.minDistancia+0.2)))
+                obstaculo = (obstaculoLidar!=None)or(((fls<self.__minDistancia+0.2)or(frs<self.__minDistancia+0.2)))
                 
                 if(gyroZ==ant_gyroZ):
-                    pasos+=1
-                if(pasos == self.pasos):
+                    __pasos+=1
+                if(__pasos == self.__pasos):
                     finalizo=False
                     break;
                 ant_gyroZ = gyroZ
@@ -983,7 +983,7 @@ class RobotController(RobotSupervisorEnv):
             Retorna True si se concreto el giro, y False en caso contrario.
         """
         angulo = np.random.uniform(low=0.174533, high=0.125*np.pi)
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         giro = False
         giro = self.giroIzquierda(angulo)
         return giro
@@ -996,7 +996,7 @@ class RobotController(RobotSupervisorEnv):
             Retorna True si se concreto el giro, y False en caso contrario.
         """
         angulo = -1*np.random.uniform(low=0.174533, high=0.125*np.pi)
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         
         giro = False
         giro = self.giroDerecha(angulo)
@@ -1008,7 +1008,7 @@ class RobotController(RobotSupervisorEnv):
 
             Retorna True si se concreto el giro y False en caso contrario.
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         #self.updateTimestep()
         giro = False
         
@@ -1017,14 +1017,14 @@ class RobotController(RobotSupervisorEnv):
             angulo=0
             direccion = self.orientacionUltimaSenial()    
             if (direccion==1):
-                #self.robot.step(self.robotTimestep)
+                #self.robot.step(self.__robotTimestep)
                 obstaculo, min = self.getObstaculoAIzquierda(360)
                 if(obstaculo==None):
                     angulo = self.anguloUltimaSenial()/2
                     giro = self.giroIzquierda(angulo)
                     giro = self.giroIzquierda(angulo) #no esta repetida
             else:
-                #self.robot.step(self.robotTimestep)
+                #self.robot.step(self.__robotTimestep)
                 obstaculo, min = self.getObstaculoADerecha(40)
                 if(obstaculo==None):
                     angulo = self.anguloUltimaSenial()
@@ -1045,19 +1045,19 @@ class RobotController(RobotSupervisorEnv):
 #-----Giroscopio-----
     def get_giroscopio(self):
         """
-        Retorna el valor del giroscopio.
+        Retorna el valor del __giroscopio.
         """
-        return self.giroscopio.getValues()
+        return self.__giroscopio.getValues()
     
     def get_orientacion_robot(self):
         """
-        Obtiene la orientación actual del robot usando el giroscopio.
+        Obtiene la orientación actual del robot usando el __giroscopio.
         Retorna el ángulo en radianes.
         """
-        gyro_values = self.giroscopio.getValues()
-        # El giroscopio da velocidad angular, necesitas integrar para obtener orientación
+        gyro_values = self.__giroscopio.getValues()
+        # El __giroscopio da velocidad angular, necesitas integrar para obtener orientación
         # O usar el acelerómetro para obtener orientación absoluta
-        accel_values = self.acelerometro.getValues()
+        accel_values = self.__acelerometro.getValues()
         
         # Calcular orientación usando acelerómetro (más estable para orientación absoluta)
         orientacion = math.atan2(accel_values[1], accel_values[0])
@@ -1069,25 +1069,25 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna el valor del sensor infrarojo frontal izquierdo.
         """
-        return self.frontLeftSensor.getValue()
+        return self.__frontLeftSensor.getValue()
 
     def get_frontRightSensor(self):
         """
         Retorna el valor del sensor infrarojo frontal derecho.
         """
-        return self.frontRightSensor.getValue()
+        return self.__frontRightSensor.getValue()
     #
     def get_rearLeftSensor(self):
         """
         Retorna el valor del sensor infrarojo trasero izquierdo.
         """
-        return self.rearLeftSensor.getValue()
+        return self.__rearLeftSensor.getValue()
 
     def get_rearRightSensor(self):
         """
         Retorna el valor del sensor infrarojo trasero derecho.
         """
-        return self.rearRightSensor.getValue()
+        return self.__rearRightSensor.getValue()
 #----------
 
 #-----Distancia límite a sensores infrarojos-----
@@ -1095,7 +1095,7 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna el valor de la distancia máxima de los sensores infrarojos.
         """
-        return self.limiteSensor
+        return self.__limiteSensor
 #----------
 
 #-----Sensores de posicion-----
@@ -1103,25 +1103,25 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna el valor del sensor de posición frontal izquierdo.
         """
-        return self.frontLeftPositionSensor.getValue()
+        return self.__frontLeftPositionSensor.getValue()
     
     def get_frontRightPositionSensor(self):
         """
         Retorna el valor del sensor de posición frontal derecho.
         """
-        return self.frontRightPositionSensor.getValue()
+        return self.__frontRightPositionSensor.getValue()
     #
     def get_rearLeftPositionSensor(self):
         """
         Retorna el valor del sensor de posición trasero izquierdo.
         """
-        return self.rearLeftPositionSensor.getValue()
+        return self.__rearLeftPositionSensor.getValue()
 
     def get_rearRightPositionSensor(self):
         """
         Retorna el valor del sensor de posiciónn trasero derecho.
         """
-        return self.rearRightPositionSensor.getValue()
+        return self.__rearRightPositionSensor.getValue()
 #----------
 
 #----Ubicación y Rotación------
@@ -1130,7 +1130,7 @@ class RobotController(RobotSupervisorEnv):
         """
             Retorna la ubicación exácta del agente dentro del simulador.
         """
-        return self.translation.getSFVec3f()
+        return self.__translation.getSFVec3f()
 
 #-----
 
@@ -1138,7 +1138,7 @@ class RobotController(RobotSupervisorEnv):
         """
             Retorna la rotación exácta del agente dentro del simulador.
         """
-        return self.rotation.getSFRotation()
+        return self.__rotation.getSFRotation()
     
 #---------------
 
@@ -1147,11 +1147,11 @@ class RobotController(RobotSupervisorEnv):
         """
         Inicializa los valores de los sensores de posición a cero.
         """
-        self.distanciaRecorrida = 0
-        self.direccionUltimaSenial = None
-        self.distanciaUltimaSenial = None
-        self.ant_dist_senial = None
-        self.ant_angulo = None
+        self.__distanciaRecorrida = 0
+        self.__direccionUltimaSenial = None
+        self.__distanciaUltimaSenial = None
+        self.__ant_dist_senial = None
+        self.__ant_angulo = None
         
         self.detener()
         self.defaultPositionSensorAnterior()
@@ -1159,10 +1159,10 @@ class RobotController(RobotSupervisorEnv):
         
 #-----Valor anterior de sensor de posicion-----
     def get_anteriorValorPositionSensor(self):
-        return self.anteriorValorPositionSensor
+        return self.__anteriorValorPositionSensor
 
     def defaultPositionSensorAnterior(self):
-        self.anteriorValorPositionSensor = [0,0,0,0]
+        self.__anteriorValorPositionSensor = [0,0,0,0]
 #----------
 
 #-----Distancia recorrida-----
@@ -1174,17 +1174,17 @@ class RobotController(RobotSupervisorEnv):
         distancia = [0, 0]
         distancia[0]=0
         distancia[1]=0
-        ps_values[0] = self.frontLeftPositionSensor.getValue()-self.anteriorValorPositionSensor[0]
-        ps_values[1] = self.frontRightPositionSensor.getValue()-self.anteriorValorPositionSensor[1]
+        ps_values[0] = self.__frontLeftPositionSensor.getValue()-self.__anteriorValorPositionSensor[0]
+        ps_values[1] = self.__frontRightPositionSensor.getValue()-self.__anteriorValorPositionSensor[1]
         
         for i in range(2):
-            distancia[i] = ps_values[i]*self.encoderUnit
+            distancia[i] = ps_values[i]*self.__encoderUnit
 
         ##print("metros recorridos: {} {}".format(distancia[0], distancia[1]))
         if(distancia[0] >= distancia[1]):
-            self.distanciaRecorrida = self.distanciaRecorrida + distancia[0]
+            self.__distanciaRecorrida = self.__distanciaRecorrida + distancia[0]
         else:
-            self.distanciaRecorrida = self.distanciaRecorrida + distancia[1]
+            self.__distanciaRecorrida = self.__distanciaRecorrida + distancia[1]
 
         return distancia;
 
@@ -1196,18 +1196,18 @@ class RobotController(RobotSupervisorEnv):
         distancia = [0, 0]
         distancia[0]=0
         distancia[1]=0
-        ps_values[0] = self.rearLeftPositionSensor.getValue()-self.anteriorValorPositionSensor[2]
-        ps_values[1] = self.rearRightPositionSensor.getValue()-self.anteriorValorPositionSensor[3]
+        ps_values[0] = self.__rearLeftPositionSensor.getValue()-self.__anteriorValorPositionSensor[2]
+        ps_values[1] = self.__rearRightPositionSensor.getValue()-self.__anteriorValorPositionSensor[3]
         ##print("position values: {} {}".format(ps_values[0],ps_values[1]))
         for i in range(2):
-            distancia[i] = ps_values[i]*self.encoderUnit
+            distancia[i] = ps_values[i]*self.__encoderUnit
 
         ##print("metros recorridos: {} {}".format(distancia[0], distancia[1]))
 
         if(distancia[0] >= distancia[1]):
-            self.distanciaRecorrida = self.distanciaRecorrida + (-1*distancia[1])
+            self.__distanciaRecorrida = self.__distanciaRecorrida + (-1*distancia[1])
         else:
-            self.distanciaRecorrida = self.distanciaRecorrida + (-1*distancia[0])
+            self.__distanciaRecorrida = self.__distanciaRecorrida + (-1*distancia[0])
 
         return distancia;
 #----------
@@ -1217,13 +1217,13 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna la distancia límite al obstaculo.
         """
-        return self.minDistancia
+        return self.__minDistancia
 
     def set_metrosColision(self, value):
         """
         Modifica la distancia límite al obstaculo.
         """
-        self.minDistancia = value
+        self.__minDistancia = value
 #----------
 
 #-----Receptor de señal-----            
@@ -1231,19 +1231,19 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna el número de paquete de datos que están actualmente en la cola del receiver.
         """
-        return self.receptor.getQueueLength()
+        return self.__receptor.getQueueLength()
     
     def getSignalStrength(self):
         """ 
         Retorna la fuerza de la señal.
         """
-        return self.receptor.getSignalStrength()
+        return self.__receptor.getSignalStrength()
     
     def getEmitterDirection(self):
         """ 
-        Retorna un vector normalizado(length=1) que indica la dirección del emisor con respecto al receptor.
+        Retorna un vector normalizado(length=1) que indica la dirección del emisor con respecto al __receptor.
         """
-        punteroDireccion = self.receptor.getEmitterDirection()
+        punteroDireccion = self.__receptor.getEmitterDirection()
         vectorDireccion = []
         for i in range(3):
             vectorDireccion.append(punteroDireccion[i])
@@ -1254,9 +1254,9 @@ class RobotController(RobotSupervisorEnv):
 #-----Calculo de Señal-----
     def distanciaSenial(self):
         """
-        Retorna la distancia del receptor al emisor en base al la fuerza de la señal.
+        Retorna la distancia del __receptor al emisor en base al la fuerza de la señal.
 
-        En el simulador la fuerza de la señar es inversa a la distancia entre el emisor y receptor al cuadrado.
+        En el simulador la fuerza de la señar es inversa a la distancia entre el emisor y __receptor al cuadrado.
         r = sqrt(1/f)
         """
         return math.sqrt(1/self.getSignalStrength())
@@ -1288,7 +1288,7 @@ class RobotController(RobotSupervisorEnv):
             Retorna True si el número de paquetes de datos que hay en la cola del receiver es mayor a cero.
         """
         self.updateTimestep()
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         
         return self.get_receiver() > 0
 
@@ -1296,7 +1296,7 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna el valor de la dirección de la ultima señal encontrada.
         """
-        return self.direccionUltimaSenial
+        return self.__direccionUltimaSenial
 
     def set_ultimaSenial(self, value):
         """
@@ -1305,13 +1305,13 @@ class RobotController(RobotSupervisorEnv):
         Args:
             value (float): [Vector normalizado que indica la dirección de al emisor].
         """
-        self.direccionUltimaSenial = value
+        self.__direccionUltimaSenial = value
 
     def get_distanciaUltimaSenial(self):
         """
         Retorna el valor de la distancia de la ultima señal encontrada.
         """
-        return self.distanciaUltimaSenial
+        return self.__distanciaUltimaSenial
 
     def set_distanciaUltimaSenial(self, value):
         """
@@ -1320,7 +1320,7 @@ class RobotController(RobotSupervisorEnv):
         Args:
             value (float): [Distancia al emisor].
         """
-        self.distanciaUltimaSenial = value
+        self.__distanciaUltimaSenial = value
 
     def resetUltimaSenial(self):
         """
@@ -1331,9 +1331,9 @@ class RobotController(RobotSupervisorEnv):
 
     def actualizarSenial(self):
         """
-        Actualiza el atributo 'ultimaSenial' y 'distanciaUltimaSenial'almacenando la dirección y la distancia ultima señal encontrada respectivamente.
+        Actualiza el atributo 'ultimaSenial' y '__distanciaUltimaSenial'almacenando la dirección y la distancia ultima señal encontrada respectivamente.
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         self.updateTimestep()
         if(self.haySenial()):
             self.set_ultimaSenial(self.getEmitterDirection()) 
@@ -1346,7 +1346,7 @@ class RobotController(RobotSupervisorEnv):
         Vacia la cola del receiver que contiene todos los paquetes recibidos hasta el momento.
         """
         while(self.get_receiver() > 0):
-            self.receptor.nextPacket()
+            self.__receptor.nextPacket()
 
     def orientacionUltimaSenial(self):
         """
@@ -1358,7 +1358,7 @@ class RobotController(RobotSupervisorEnv):
                 3 : orientacio desconocida.
             
         """
-        #self.robot.step(self.robotTimestep)
+        #self.robot.step(self.__robotTimestep)
         self.updateTimestep()
         self.actualizarSenial() 
         direccion = self.get_ultimaSenial()
@@ -1390,9 +1390,9 @@ class RobotController(RobotSupervisorEnv):
         """
         Retorna True si alguno los valores de los sensores infrarojos frontales son menores o iguales a la distancia límite al obstaculo.
         """
-        min = self.minDistancia
-        flsv = self.frontLeftSensor.getValue()  # Front Left Sensor Value
-        frsv = self.frontRightSensor.getValue() # Front Right Sensor Value
+        min = self.__minDistancia
+        flsv = self.__frontLeftSensor.getValue()  # Front Left Sensor Value
+        frsv = self.__frontRightSensor.getValue() # Front Right Sensor Value
         return (flsv <= min) or (frsv <= min)
 #----------
 
@@ -1400,14 +1400,14 @@ class RobotController(RobotSupervisorEnv):
 
     def getObstaculo(self,lidar_slice,extra=0):
         """
-        Retorna el punto del lidar en donde se encontro la distancia mínima a un obstaculo, junto con el valor de dicha distancia.
+        Retorna el punto del __lidar en donde se encontro la distancia mínima a un obstaculo, junto con el valor de dicha distancia.
 
         Args:
-            lidar_slice (Array float): [Conjunto de valores de los puntos del lidar].
+            lidar_slice (Array float): [Conjunto de valores de los puntos del __lidar].
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
 
         """
-        min = self.minDistancia + extra
+        min = self.__minDistancia + extra
         min_index = None
         for index in range(len(lidar_slice)):
             if (0.1<lidar_slice[index] <= min)and(lidar_slice[index]>0):
@@ -1417,19 +1417,19 @@ class RobotController(RobotSupervisorEnv):
 
     def getObstaculoAlFrente(self,extra=0):
         """
-        Retorna un arreglo unidimensional de tres posiciones que nos brinda información del obstaculo en frente del lidar. 
-         - En la posición cero se guarda el punto del lidar en el que se encontro la mínima distancia.
+        Retorna un arreglo unidimensional de tres posiciones que nos brinda información del obstaculo en frente del __lidar. 
+         - En la posición cero se guarda el punto del __lidar en el que se encontro la mínima distancia.
          - En la posición uno se guarda el lado ("rigth" o "left") en donde está el obstaculo.
          - En la posición dos se guarda el valor de la mínima distancia encontrada.
 
-        El frente del lidar se definen por el atributo front_range.
+        El frente del __lidar se definen por el atributo __front_range.
 
         Args:
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
         """
-        #self.robot.step(self.robotTimestep)
-        lidar_data = self.lidar.getRangeImage()
-        fr = self.front_range # 20
+        #self.robot.step(self.__robotTimestep)
+        lidar_data = self.__lidar.getRangeImage()
+        fr = self.__front_range # 20
         lidar_front = lidar_data[:fr] + lidar_data[-fr:]        # mitad primera: r, mitad izq: l
         ##print(lidar_front)
         obstaculo, min = self.getObstaculo(lidar_front, extra)         # Retorna el número de index y le minimo valor
@@ -1443,19 +1443,19 @@ class RobotController(RobotSupervisorEnv):
 
     def getObstaculoAtras(self,extra=0):
         """
-        Retorna un arreglo unidimensional de tres posiciones que nos brinda información del obstaculo en la parte trasera del lidar. 
-         - En la posición cero se guarda el punto del lidar en el que se encontro la mínima distancia.
+        Retorna un arreglo unidimensional de tres posiciones que nos brinda información del obstaculo en la parte trasera del __lidar. 
+         - En la posición cero se guarda el punto del __lidar en el que se encontro la mínima distancia.
          - En la posición uno se guarda el lado ("rigth" o "left") en donde está el obstaculo.
          - En la posición dos se guarda el valor de la mínima distancia encontrada.
 
-        La parte trasera del lidar se define por el atributo back_range.
+        La parte trasera del __lidar se define por el atributo __back_range.
 
         Args:
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
         """
-        #self.robot.step(self.robotTimestep)
-        lidar_data = self.lidar.getRangeImage()
-        br = self.back_range # 25
+        #self.robot.step(self.__robotTimestep)
+        lidar_data = self.__lidar.getRangeImage()
+        br = self.__back_range # 25
         lidar_back = lidar_data[200-br:200+br]        # mitad primera: r, mitad izq: l
         ##print(lidar_front)
         obstaculo, min = self.getObstaculo(lidar_back, extra)         # Retorna el número de index y le minimo valor
@@ -1469,35 +1469,35 @@ class RobotController(RobotSupervisorEnv):
 
     def getObstaculoADerecha(self, punto_inicio, extra=0):
         """
-        Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la derecha del lidar.
+        Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la derecha del __lidar.
         
-        La derecha del lidar se define desde el punto recibido por parametro hasta el punto 124 que indica poco mas de 90º
+        La derecha del __lidar se define desde el punto recibido por parametro hasta el punto 124 que indica poco mas de 90º
         
         Args:
-            punto_inicio (integer): [Punto de inicio en el que el lidar será leido]
+            punto_inicio (integer): [Punto de inicio en el que el __lidar será leido]
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero].
         """
-        #self.robot.step(self.robotTimestep)
-        er = self.error_range
-        lidar_data = self.lidar.getRangeImage()
-        lidar_right = lidar_data[punto_inicio : 99+self.front_range]
+        #self.robot.step(self.__robotTimestep)
+        er = self.__error_range
+        lidar_data = self.__lidar.getRangeImage()
+        lidar_right = lidar_data[punto_inicio : 99+self.__front_range]
         obstaculo, min = self.getObstaculo(lidar_right,extra)
         return obstaculo, min
 
     def getObstaculoAIzquierda(self, punto_fin, extra=0):
         """
-        Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la izquierda del lidar.
+        Retorna el punto en el que se encuentra la menor distancia al obstaculo sobre la izquierda del __lidar.
         
-        La izquierda del lidar se define desde el punto 275 (menos de 180º) hasta el punto pasado por parametro.
+        La izquierda del __lidar se define desde el punto 275 (menos de 180º) hasta el punto pasado por parametro.
         
         Args:
-            punto_fin (integer): [Punto final en el que el lidar será leido]
+            punto_fin (integer): [Punto final en el que el __lidar será leido]
             extra (float): [Distancia extra a la mínima al obstaculo, por defecto cero punto].
         """
-        #self.robot.step(self.robotTimestep)
-        er = self.error_range
-        lidar_data = self.lidar.getRangeImage()
-        lidar_left = lidar_data[300-self.front_range:punto_fin]
+        #self.robot.step(self.__robotTimestep)
+        er = self.__error_range
+        lidar_data = self.__lidar.getRangeImage()
+        lidar_left = lidar_data[300-self.__front_range:punto_fin]
         obstaculo, min = self.getObstaculo(lidar_left,extra)
         return obstaculo, min
 
@@ -1514,13 +1514,13 @@ class RobotController(RobotSupervisorEnv):
                 - hay_pared (bool): True si se detecta una pared, False en caso contrario
                 - longitud_pared (float): Longitud estimada de la pared en metros
         """
-        # Obtener datos del lidar
-        lidar_data = np.array(self.lidar.getRangeImage())
+        # Obtener datos del __lidar
+        lidar_data = np.array(self.__lidar.getRangeImage())
         
         lidar_data[np.isinf(lidar_data)] = 2
         
         # Rango de ángulos para el lado izquierdo (aproximadamente 90 grados a la izquierda)
-        # Considerando que el lidar tiene 400 puntos y el punto 0 es el frente
+        # Considerando que el __lidar tiene 400 puntos y el punto 0 es el frente
         # El lado izquierdo corresponde aproximadamente a los puntos 75-125 (90° ± 22.5°)
         inicio_izquierda = 75
         fin_izquierda = 125
@@ -1599,12 +1599,12 @@ class RobotController(RobotSupervisorEnv):
                 - hay_pared (bool): True si se detecta una pared, False en caso contrario
                 - longitud_pared (float): Longitud estimada de la pared en metros
         """
-        # Obtener datos del lidar
-        lidar_data = np.array(self.lidar.getRangeImage())
+        # Obtener datos del __lidar
+        lidar_data = np.array(self.__lidar.getRangeImage())
         
         lidar_data[np.isinf(lidar_data)] = 2
         # Rango de ángulos para el lado derecho (aproximadamente 90 grados a la derecha)
-        # Considerando que el lidar tiene 400 puntos y el punto 0 es el frente
+        # Considerando que el __lidar tiene 400 puntos y el punto 0 es el frente
         # El lado derecho corresponde aproximadamente a los puntos 275-325 (270° ± 22.5°)
         inicio_derecha = 275
         fin_derecha = 325
@@ -1672,10 +1672,10 @@ class RobotController(RobotSupervisorEnv):
     
     def getPuntoEnRadianes(self,index,cant_puntos=400.0):
         """
-        Retorna la conversión de un punto del lidar a un angulo especifico.
+        Retorna la conversión de un punto del __lidar a un angulo especifico.
 
         Args:
-            cant_puntos (float): [Cantidad de puntos del lidar, por defecto 400].
+            cant_puntos (float): [Cantidad de puntos del __lidar, por defecto 400].
 
         """
         radianes_por_punto = (2*np.pi) / float(cant_puntos)
@@ -1684,10 +1684,10 @@ class RobotController(RobotSupervisorEnv):
 
     def getAnguloDeGiro(self,cd_index,goal_index):
         """
-        Retorna el angulo entre dos puntos del lidar.
+        Retorna el angulo entre dos puntos del __lidar.
 
         Args:
-            cd_index (int): [Punto especifico del lidar]
+            cd_index (int): [Punto especifico del __lidar]
             goal_index (int): [Punto objetivo]
         """
         cd_index_en_radianes = self.getPuntoEnRadianes(cd_index)
@@ -1706,7 +1706,7 @@ class RobotController(RobotSupervisorEnv):
         Returns:
             int: El tiempo de paso del robot.
         """
-        super(Supervisor, self).step(self.robotTimestep)
+        super(Supervisor, self).step(self.__robotTimestep)
 
     def activateRobotTimestep(self):
         """_summary_
@@ -1721,6 +1721,6 @@ class RobotController(RobotSupervisorEnv):
         Returns:
             _type_: _description_
         """
-        return self.robotTimestep
+        return self.__robotTimestep
     
 #--------------------
