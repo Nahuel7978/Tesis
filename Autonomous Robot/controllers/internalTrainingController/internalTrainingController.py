@@ -6,7 +6,8 @@ import datetime
 
 import numpy as np
 from gym.spaces import Box,Discrete
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO, A2C
+from wrapper import TimeoutWrapper
 
 import sys
 import os
@@ -35,14 +36,14 @@ def trainAgent(env):
             monitored_env,
             verbose=2,
             learning_rate=0.0005,
-            buffer_size=25000,
-            learning_starts=500,
+            buffer_size=25000, #
+            learning_starts=500, #
             batch_size=32,
             gamma=0.99,
-            train_freq=4,
-            target_update_interval=500,
-            exploration_fraction=0.1,
-            exploration_final_eps=0.02,
+            train_freq=4, #
+            target_update_interval=500,#
+            exploration_fraction=0.1,#
+            exploration_final_eps=0.02,#
             tensorboard_log=log_dir
         )
 
@@ -67,6 +68,7 @@ def trainAgent(env):
 #------------
 print("Entrenando agente...")
 env = RobotController()
+wrapped_env = TimeoutWrapper(env, timeout_seconds=10)
+wrapped_env.step(2)
 #trainAgent(env)
-print(env.get_observations())
-check_env(env, warn=True)
+#check_env(env, warn=True)
