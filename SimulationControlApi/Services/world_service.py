@@ -29,9 +29,9 @@ class WorldService:
     """
     
     def __init__(self):
-        self.config = Config()
-        self.jobs_storage_path = Path(self.config.get_storage_path())
-        self.internal_controller_path = Path(self.config.get_internal_controller_path())
+        self.__config = Config()
+        self.__jobs_storage_path = Path(self.__config.get_storage_path())
+        self.__internal_controller_path = Path(self.__config.get_internal_controller_path())
     
     def setup_job_workspace(self, job_id: str) -> Path:
         """
@@ -46,7 +46,7 @@ class WorldService:
         Raises:
             WorldProcessingError: Si no se puede crear el directorio
         """
-        job_path = os.path.join(self.jobs_storage_path, job_id)
+        job_path = os.path.join(self.__jobs_storage_path, job_id)
         
         try:
             # Crear directorios necesarios
@@ -76,7 +76,7 @@ class WorldService:
         Raises:
             WorldProcessingError: Si hay problemas con la extracción
         """
-        job_path = os.path.join(self.jobs_storage_path, job_id)
+        job_path = os.path.join(self.__jobs_storage_path, job_id)
         world_path = os.path.join(job_path, 'world')
         
         try:
@@ -122,7 +122,7 @@ class WorldService:
         Returns:
             str: Nombre del robot
         """
-        config_path = os.path.join(self.jobs_storage_path, job_id, 'config', 'train_config.json')
+        config_path = os.path.join(self.__jobs_storage_path, job_id, 'config', 'train_config.json')
         
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
