@@ -14,10 +14,10 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 
-# ===== IMPORTS LOCALES SIN __init__.py =====
 current_dir = Path(__file__).parent
 monitor_path = str(current_dir / "Monitor")
 wrapper_path = str(current_dir / "Wrapper")
+callback_path = str(current_dir / "Callback")
 
 if monitor_path not in sys.path:
     sys.path.insert(0, monitor_path)
@@ -25,11 +25,15 @@ if monitor_path not in sys.path:
 if wrapper_path not in sys.path:
     sys.path.insert(0, wrapper_path)
 
+if callback_path not in sys.path:
+    sys.path.insert(0, callback_path)
+
 from TrainingLogger import TrainingLogger
 from MetricsCapture import MetricsCapture
 from StreamInterceptor import StreamInterceptor
 from state_service import StateService
 from TimeoutWrapper import TimeoutWrapper
+from Overwrite import OverwriteCheckpointCallback
 
 
 #PATHS
@@ -208,7 +212,7 @@ class TrainingController:
         callbacks = []
         if(self.__config != None):     
             # Checkpoint callback para guardar modelo periódicamente
-            checkpoint_callback = CheckpointCallback(
+            checkpoint_callback = OverwriteCheckpointCallback(
                 save_freq=max(1000, int(self.__config["timesteps"]) // 10),
                 save_path=str(MODEL_DIR / "checkpoints"),
                 name_prefix="model_checkpoint"
