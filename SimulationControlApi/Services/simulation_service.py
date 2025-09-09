@@ -224,7 +224,7 @@ class SimulationService:
             if(state == "WAIT"):
                 raise Exception(f"El job {job_id} aún está en ejecución. El modelo estará disponible una vez que el job haya finalizado.")
             elif(state == "RUNNING"):
-                model_path = os.path.join(self.__jobs_storage_path, job_id, 'trained_model', 'checkpoints' ,'model_checkpoint.zip')
+                model_path = os.path.join(self.__jobs_storage_path, job_id, 'trained_model', 'checkpoints' ,'model_checkpoint_latest.zip')
                 if os.path.exists(model_path):
                     return model_path, "checkpoint"
                 else:
