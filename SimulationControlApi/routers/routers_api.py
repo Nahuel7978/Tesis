@@ -103,9 +103,12 @@ async def download_model(job_id: str):
     """
     try:
         model_path, message = service.get_model_path(job_id)
-        response=FileResponse(model_path, filename=f"model_{job_id}.zip", media_type='application/zip')
-        response.headers["X-Download-Message"] = message
-        return response
+        if(model_path ==None):
+            raise HTTPException(status_code=404, detail=message)
+        else:
+            response=FileResponse(model_path, filename=f"model_{job_id}.zip", media_type='application/zip')
+            response.headers["X-Download-Message"] = message
+            return response
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Modelo no encontrado")
     except Exception as e:
