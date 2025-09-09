@@ -121,8 +121,8 @@ class DockerService:
                         Xvfb :99 -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &
                         sleep 3
                         
-                        echo "Verificando conectividad..."
-                        ping -c 1 raw.githubusercontent.com || echo "Sin conectividad a internet - modo offline"
+                        echo "Verificando OpenGL..."
+                        DISPLAY=:99 glxinfo | head -10 || echo "Sin aceleración OpenGL"
 
                         webots --no-rendering --batch --mode=fast --stdout --stderr "{container_wbt_path}"'
                    """
@@ -136,69 +136,51 @@ class DockerService:
             "DISPLAY": ":99", #En un contenedor Docker sin pantalla física, Xvfb crea una pantalla virtual (normalmente :99 o :1)
             "QT_X11_NO_MITSHM": "1",
             "QT_QPA_PLATFORM": "xcb",#Webots usa Qt, y necesita especificar cómo comunicarse con el servidor X (Xvfb)
-            ###
-            #CAMBIAR CUANDO SE USE GPU !!!! ACA AQUI
-            "LIBGL_ALWAYS_SOFTWARE": "1",#Fuerza a OpenGL a usar renderizado por software (CPU)
-            "GALLIUM_DRIVER": "llvmpipe",#llvmpipe es un driver de Mesa que hace renderizado OpenGL usando la CPU de forma eficiente
-            ###
+            
+            **({#GPU
+                "LIBGL_ALWAYS_INDIRECT": "0",
+                "DRI_PRIME": "1",
+            } if self._has_gpu_support() else { #CPU
+                "LIBGL_ALWAYS_SOFTWARE": "1",
+                "GALLIUM_DRIVER": "llvmpipe",
+            }),
             "MESA_GL_VERSION_OVERRIDE": "3.3",
+            #"MESA_GLSL_VERSION_OVERRIDE": "130",
+            #"MESA_NO_ERROR": "1",
             "PYTHONPATH": "/workspace" #El contenedor tendrá /workspace en el Python path
         }
 
         #Ejecución del contenedor
         try:
             logger.info(f"Creando y ejecutando contenedor '{container_name}' con imagen '{self.__image_name}'...")
-            container = self.__client.containers.run(
-                image=self.__image_name,
-                name=container_name,
-                command=command,
-                network_mode="bridge",
-                working_dir="/workspace",
-                volumes=volumes,
-                environment=environment,
-                user=f"{os.getuid()}:{os.getgid()}",  # Ejecuta como usuario actual para evitar problemas de permisos
-                detach=True,
-                tty=True,
-                stdout=True,
-                stderr=True
-            )
-            logger.info(f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente.")
+            container_arg = {
+                "image":self.__image_name,
+                "name":container_name,
+                "command":command,
+                "network_mode":"bridge",
+                "working_dir":"/workspace",
+                "volumes":volumes,
+                "environment":environment,
+                "user":f"{os.getuid()}:{os.getgid()}",  # Ejecuta como usuario actual para evitar problemas de permisos
+                "detach":True,
+                "tty":True,
+                "stdout":True,
+                "stderr":True
+            }
+
+            """ El hardware de mi PC es viejo para esto
+            if self._has_gpu_support():
+                container_arg["devices"] = [
+                    "/dev/dri:/dev/dri:rwm",
+                    "/dev/dri/renderD128:/dev/dri/renderD128:rwm"
+                ]
+                # También agregar privilegios:
+                container_arg["privileged"] = False
+                container_arg["cap_add"] = ["SYS_ADMIN"]
             """
-            print("Logs de la simulación:")
-            print("-" * 50)
 
-            # Buffer para almacenar los bytes que no forman una línea completa
-            log_buffer = b''
-            controller_finished = False
-
-            # Capturar logs en tiempo real y mostrarlos completos
-            for chunk in container.logs(stream=True, follow=True):
-                # Añadimos el nuevo chunk de bytes al buffer
-                log_buffer += chunk
-                
-                # Buscamos saltos de línea ('\n') en el buffer
-                while b'\n' in log_buffer:
-                    # Dividimos el buffer en la primera línea completa y el resto
-                    line, log_buffer = log_buffer.split(b'\n', 1)
-                    
-                    # Decodificamos la línea y la imprimimos
-                    decoded_line = line.decode("utf-8")
-                    print(decoded_line)
-                    
-                    # Verificar si InternalController terminó
-                    if "InternalController' controller exited with status:" in decoded_line:
-                        logger.info("InternalController terminó, deteniendo simulación...")
-                        controller_finished = True
-                        break
-                
-                if controller_finished:
-                    break
-
-            # Después de que el bucle termine, imprimimos cualquier resto en el buffer
-            if log_buffer:
-                print(log_buffer.decode("utf-8"))
-            """
-                
+            container = self.__client.containers.run(**container_arg)    
+            
             return f"Contenedor '{container_name}' (ID: {container.id}) iniciado exitosamente."
         except docker.errors.ImageNotFound:
             logger.error(f"La imagen de Docker '{self.__image_name}' no fue encontrada.")
@@ -230,7 +212,28 @@ class DockerService:
             logger.error(f"Error de la API de Docker al detener el contenedor '{container_name}': {e}")
             return False
 
+    def list_running_simulations(self):
+        """Lista los contenedores Docker que están ejecutando simulaciones."""
+        try:
+            containers = self.__client.containers.list(filters={"name": "webots_job_"})
+            running_jobs = [container.name for container in containers]
+            logger.info(f"Contenedores en ejecución: {running_jobs}")
+            return running_jobs
+        except docker.errors.APIError as e:
+            logger.error(f"Error de la API de Docker al listar contenedores: {e}")
+            return []
 
+    
+    def _has_gpu_support(self):
+        """Verifica si el sistema tiene soporte GPU"""
+        try:
+            import subprocess
+            result = subprocess.run(['glxinfo', '-B'], capture_output=True, text=True)
+            return "direct rendering: Yes" in result.stdout
+        except:
+            return False
+
+"""
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     docker_service = DockerService()
@@ -238,3 +241,4 @@ if __name__ == "__main__":
     pt= (base_dir / "Storage/Jobs/job_1/world/Autonomous Robot/worlds/Autonomous Robot.wbt").resolve()
     #docker_service.start_simulation_for_job("job_1", pt)
     docker_service.stop_simulation("job_1")
+"""
