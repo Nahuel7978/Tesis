@@ -177,8 +177,7 @@ class WorldService:
             return world_file
         except Exception as e:
             logger.error(f"Error validando mundo: {str(e)}")
-        
-    
+           
     def patch_world_controllers(self,robot_name:str, world_file_path: str) -> None:
         """
         Parchea el archivo .wbt para que todos los robots usen InternalController.
@@ -214,7 +213,23 @@ class WorldService:
         except Exception as e:
             logger.error(f"Error parcheando archivo .wbt: {str(e)}")
             raise WorldProcessingError(f"Error en el parcheo: {str(e)}")
+
+    def delete_world(self, job_path:Path):
+        world=job_path / "world"
+        try:
+            if(self._get_world(job_path)==False):
+                logger.info("No existe el directorio world para eliminar")
+            else:
+                shutil.rmtree(world)
+                logger.info(f"Directorio world eliminado correctamente: {world}")
+        except Exception as e:
+            logger.error(f"Error eliminando directorio world: {str(e)}")
+            raise WorldProcessingError(f"Error eliminando directorio world: {str(e)}")
         
+    def _get_world(self, job_path:Path):
+        world=job_path / "world"
+        return os.path.exists(world)
+    
     def _is_unsafe_path(self, path: str) -> bool:
         """Verifica si una ruta es insegura (path traversal)"""
         return os.path.isabs(path) or ".." in path
