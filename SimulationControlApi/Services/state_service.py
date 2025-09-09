@@ -7,8 +7,7 @@ class StateService():
     def __init__(self, path_state=""):
         
         self.__path_state = path_state
-        self.__states=["WAIT","RUNNING", "ERROR", "READY", "FINISHED", "TERMINATED"]
-        
+        self.__states=["WAIT","RUNNING", "ERROR", "READY", "TERMINATED"]
 
     def create_state(self):
         try:
