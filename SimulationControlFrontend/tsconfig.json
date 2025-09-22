@@ -1,0 +1,73 @@
+{
+  // Compilador de TypeScript - Configuración principal
+  "compilerOptions": {
+    // === CONFIGURACIÓN DE DESTINO ===
+    "target": "ES2020",                    // Versión de JavaScript de salida (compatible con navegadores modernos)
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], // Librerías que TypeScript puede usar
+    "module": "ESNext",                    // Sistema de módulos (para Vite/bundlers modernos)
+    
+    // === RESOLUCIÓN DE MÓDULOS ===
+    "moduleResolution": "bundler",         // Cómo resuelve TypeScript los imports (optimizado para bundlers como Vite)
+    "allowImportingTsExtensions": true,    // Permite importar archivos .ts/.tsx directamente
+    "resolveJsonModule": true,             // Permite importar archivos JSON
+    "baseUrl": ".",                        // Ruta base para imports relativos
+    "paths": {
+      "@/*": ["./src/*"],                  // Alias: @/components/Button en lugar de ../../components/Button
+      "@/components/*": ["./src/components/*"],
+      "@/pages/*": ["./src/pages/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/types/*": ["./src/types/*"]
+    },
+    
+    // === CONFIGURACIÓN DE REACT ===
+    "jsx": "react-jsx",                    // Soporte moderno para JSX (no necesita import React)
+    "useDefineForClassFields": true,       // Compatibilidad con class fields de ES2022
+    
+    // === OPTIMIZACIONES DE COMPILACIÓN ===
+    "skipLibCheck": true,                  // No verifica tipos en node_modules (más rápido)
+    "isolatedModules": true,               // Cada archivo debe poder compilarse independientemente
+    "noEmit": true,                        // No genera archivos JS (Vite se encarga de eso)
+    
+    // === VERIFICACIONES ESTRICTAS ===
+    "strict": true,                        // Activa todas las verificaciones estrictas
+    "noUnusedLocals": true,               // Error si hay variables locales no usadas
+    "noUnusedParameters": true,           // Error si hay parámetros no usados
+    "noFallthroughCasesInSwitch": true,   // Error si un case no tiene break
+    "exactOptionalPropertyTypes": true,    // Diferencia entre undefined y propiedades opcionales
+    "noUncheckedIndexedAccess": true,     // Verifica acceso a arrays/objetos con índices
+    
+    // === CONFIGURACIONES ADICIONALES ===
+    "allowSyntheticDefaultImports": true,  // Permite import React from 'react' aunque no tenga export default
+    "esModuleInterop": true,              // Mejor interoperabilidad entre CommonJS y ES modules
+    "forceConsistentCasingInFileNames": true, // Fuerza consistencia en nombres de archivos
+    "declaration": false,                  // No generar archivos .d.ts (no necesario para apps)
+    "declarationMap": false,              // No generar mapas de declaraciones
+    "sourceMap": true                     // Generar source maps para debugging
+  },
+  
+  // === ARCHIVOS A INCLUIR ===
+  "include": [
+    "src/**/*",                           // Todo en src/
+    "src/**/*.ts",                        // Archivos TypeScript
+    "src/**/*.tsx",                       // Archivos React/TypeScript
+    "src/**/*.vue",                       // Por si usas Vue en el futuro
+    "vite.config.ts"                      // Configuración de Vite
+  ],
+  
+  // === ARCHIVOS A EXCLUIR ===
+  "exclude": [
+    "node_modules",                       // Dependencias
+    "dist",                               // Archivos compilados
+    "build",                              // Carpeta de build
+    "src-tauri",                          // Código Rust de Tauri
+    "**/*.test.ts",                       // Tests (opcional, puedes remover si quieres incluirlos)
+    "**/*.test.tsx"
+  ],
+  
+  // === CONFIGURACIÓN DEL EDITOR ===
+  "ts-node": {
+    "esm": true                           // Soporte para ES modules en ts-node
+  }
+}
