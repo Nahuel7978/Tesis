@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from routers.routers_api import router as api_router
 from routers.websocket_routers import router as websocket_router
-from SimulationControlApi.Services.job_cleaner_service import JobCleanerService
+from Services.job_cleaner_service import JobCleanerService
 import logging
 import atexit
 
