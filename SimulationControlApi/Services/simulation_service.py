@@ -1,6 +1,7 @@
 import os
 import re
-import shutil
+import zipfile
+import shutil # Necesario para eliminar el archivo temporal
 from pathlib import Path
 import logging
 import json
@@ -170,41 +171,56 @@ class SimulationService:
             logger.error(f"Error al obtener los logs del job {job_id}: {e}")
             raise
 
-    def get_tensorboard_path(self, job_id:str):
+    def get_tensorboard_path(self, job_id: str):
         """
-        Obtiene la ruta del directorio de TensorBoard para el job.
-        
-        Args:
-            job_id (str): El ID del job.
-        
-        Returns:
-            str: La ruta del directorio de TensorBoard.
+        Comprime el directorio de logs de TensorBoard del job en un archivo ZIP
+        y devuelve la ruta al archivo ZIP creado.
         """
         try:
-            logger.info(f"Obteniendo ruta de TensorBoard para el job {job_id}")
-            log_path = os.path.join(self.__jobs_storage_path, job_id, 'logs')
+            logger.info(f"Comprimiendo logs de TensorBoard para el job {job_id}")
+            
+            # 1. Definir rutas
+            job_dir = os.path.join(self.__jobs_storage_path, job_id)
+            log_path = os.path.join(job_dir, 'logs') # El directorio a comprimir
+            zip_filename = f"tensorboard_{job_id}.zip"
+            zip_path = os.path.join(job_dir, zip_filename)
+
+            if(os.path.exists(zip_path)):
+                os.remove(zip_path)
+
+            # 2. Validaciones (Mantenidas)
             if not os.path.isdir(log_path):
                 raise FileNotFoundError(f"Directorio de logs no encontrado para el job {job_id}")
-            
-            self.__state_service.set_path(os.path.join(self.__jobs_storage_path,job_id,'logs','state.json'))
-            if(self.__state_service.get_state() in ["WAIT","RUNNING"]):
-                raise Exception(f"El job {job_id} aún está en ejecución. TensorBoard estará disponible una vez que el job haya finalizado.")
 
-            tensorboard_file = None
+            self.__state_service.set_path(os.path.join(job_dir, 'logs', 'state.json'))
+            if (self.__state_service.get_state() in ["WAIT", "RUNNING"]):
+                raise Exception(f"El job {job_id} aún está en ejecución. TensorBoard estará disponible una vez que el job haya finalizado.")
+            
+            tensorboard_files = []
             for filename in os.listdir(log_path):
                 if filename.startswith("events.out.tfevents"):
-                    tensorboard_file = filename
-                    break
+                    tensorboard_files.append(filename)
 
-            if not tensorboard_file:
-                raise FileNotFoundError(f"Archivo de TensorBoard no encontrado en el directorio de logs para el job {job_id}")
-
-            # Si el archivo se encuentra, devuélvelo
-            file_path = os.path.join(log_path, tensorboard_file)
-            return file_path
+            if not tensorboard_files:
+                raise FileNotFoundError(f"Archivos de evento de TensorBoard no encontrados en el directorio de logs para el job {job_id}")
+            
+            # 4. Crear el archivo ZIP
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for filename in tensorboard_files:
+                    file_path = os.path.join(log_path, filename)
+                    # El arcname (nombre dentro del ZIP) lo ponemos en una subcarpeta
+                    # para que no se mezclen los archivos al descomprimir
+                    arcname = os.path.join(f"tensorboard_logs_{job_id}", filename) 
+                    zipf.write(file_path, arcname)
+                            
+            logger.info(f"Compresión exitosa. Archivo ZIP creado en {zip_path}")
+            return zip_path # Retorna la ruta al archivo ZIP
                 
         except Exception as e:
-            logger.error(f"Error al obtener la ruta de TensorBoard para el job {job_id}: {e}")
+            logger.error(f"Error al comprimir logs de TensorBoard para el job {job_id}: {e}")
+            # Es buena práctica limpiar el ZIP si se creó un parcial antes de fallar
+            if 'zip_path' in locals() and os.path.exists(zip_path):
+                os.remove(zip_path)
             raise
 
     def get_model_path(self, job_id:str):
