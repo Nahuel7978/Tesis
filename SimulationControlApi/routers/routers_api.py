@@ -75,8 +75,7 @@ async def get_job_state(job_id: str):
 @router.get("/jobs/{job_id}/metrics", status_code=200)
 async def get_metrics(job_id: str):
     """
-    Devuelve las últimas 'tail' líneas de train.log (útil para polling rápido).
-    Para streaming en tiempo real usá WebSocket/SSE por separado (stream_service).
+    Devuelve el historial de métricas en formato JSON.
     """
     try:
         return service.get_logs(job_id)
@@ -87,12 +86,26 @@ async def get_metrics(job_id: str):
 @router.get("/jobs/{job_id}/download/tensorboard", status_code=200)
 async def download_tensorboard(job_id: str):
     try:
-        tb_path = service.get_tensorboard_path(job_id)
-        response=FileResponse(tb_path, filename=f"tensorboard_file", media_type='application/octet-stream')
+        zip_path = service.get_tensorboard_path(job_id)
+        
+        # Extrae el nombre del archivo ZIP de la ruta para el navegador
+        zip_filename = os.path.basename(zip_path) 
+        
+        # Devuelve el archivo ZIP
+        response = FileResponse(
+            path=zip_path,
+            filename=zip_filename,
+            media_type='application/zip'
+        )
+        response.headers["Content-Disposition"] = f"attachment; filename={zip_filename}"
+
         return response
+        
     except FileNotFoundError as e:
+        # Se lanza si el directorio de logs no se encuentra
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        # Se lanza si el job está corriendo o hay un error de compresión
         raise HTTPException(status_code=500, detail=f"Error descargando los logs de TensorBoard: {e}")
 
 
@@ -106,7 +119,11 @@ async def download_model(job_id: str):
         if(model_path ==None):
             raise HTTPException(status_code=404, detail=message)
         else:
-            response=FileResponse(model_path, filename=f"model_{job_id}.zip", media_type='application/zip')
+            if(message=="checkpoint"):
+                response=FileResponse(model_path, filename=f"model_checkpoint_latest.zip", media_type='application/zip')    
+            else:
+                response=FileResponse(model_path, filename=f"model_{job_id}.zip", media_type='application/zip')
+                
             response.headers["X-Download-Message"] = message
             return response
     except FileNotFoundError:
