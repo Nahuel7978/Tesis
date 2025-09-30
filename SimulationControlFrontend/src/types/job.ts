@@ -15,6 +15,13 @@ export interface Job {
   errors?: string[];
 }
 
+export interface JobSummary {
+  id: string;
+  state: JobState;
+  worldName: string;
+  createdAt: string;
+}
+
 // Job status response from API
 export interface JobStatusResponse {
   state: JobState;
