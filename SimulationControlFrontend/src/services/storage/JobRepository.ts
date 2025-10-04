@@ -1,7 +1,7 @@
 // JobRepository.ts
 
 import {IStorage, storage} from '@/services/storage/StorageIndex';
-import { Job, JobSummary } from '@/types/TypeIndex';
+import { Job, JobState, JobSummary } from '@/types/TypeIndex';
 
 export class JobRepository {
   private storage: IStorage;
@@ -28,10 +28,11 @@ export class JobRepository {
     const allJobs = await Promise.all(jobPromises);
 
     const summaries: JobSummary[] = [];
-
     // Filtro los valores nulos (en caso de error) y mapeo a JobSummary.
+
     for (const job of allJobs) {
       if (job) {
+        console.log('Loaded job from storage:', job);
         summaries.push({
           id: job.id,
           state: job.state,
@@ -40,7 +41,6 @@ export class JobRepository {
         });
       }
     }
-
     return summaries;
   }
 
