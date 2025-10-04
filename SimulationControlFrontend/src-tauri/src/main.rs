@@ -8,11 +8,23 @@ use tauri::{
     LogicalSize,
     PhysicalSize, // (Opcional) si prefieres trabajar con píxeles físicos
 };
+//use tauri_plugin_store::StoreBuilder; 
+//use tauri_plugin_log::Builder as LogBuilder; 
+//use std::path::PathBuf; 
+use tauri_plugin_store::StoreExt;
+use serde_json::json;
+
 
 fn main() {
     tauri::Builder::default()
+    .plugin(tauri_plugin_store::Builder::default().build())
         // 🚀 La función .setup() es donde se ejecuta el código después de que la app se inicializa.
         .setup(|app| {
+            let store = app.store("simulation_control_store.json")?;
+            store.set("some-key", json!({ "value": 5 }));
+            let value = store.get("some-key").expect("Failed to get value from store");
+            //---Logica de pantanlla completa---//
+
             // 1. Obtenemos la ventana principal. Asumimos que su etiqueta es 'main'.
             //    Si usaste un 'label' diferente en tauri.config.json, cámbialo aquí.
             let main_window = app.get_webview_window("main").expect("No se encontró la ventana principal");
