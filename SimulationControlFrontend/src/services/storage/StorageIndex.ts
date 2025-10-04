@@ -13,8 +13,8 @@ const IS_TAURI = true; // Forzar Tauri para pruebas locales
  * Selecciona automáticamente la implementación según el entorno
  */
 export const storage: IStorage = IS_TAURI 
-  ? new TauriStorage('webots-training-store.json')
-  : new WebStorage('webots_training_');
+  ? new TauriStorage('simulation_control_store.json')
+  : new WebStorage('simulation_control_store.json');
 
 /**
  * Constantes para las claves de almacenamiento
