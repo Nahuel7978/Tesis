@@ -10,8 +10,8 @@ export interface Job {
   createdAt: string; // ISO timestamp
   lastUpdated: string; // ISO timestamp
   // Optional fields populated from API
-  initTimestamp?: string;
-  endTimestamp?: string;
+  initTimestamp?: string | undefined;
+  endTimestamp?: string | undefined;
   errors?: string[];
 }
 
