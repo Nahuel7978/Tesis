@@ -37,7 +37,6 @@ export class TauriStorage implements IStorage {
   async get<T>(key: string): Promise<T | null> {
     try {
       const rid = await this.ensureStore();
-      
       // El plugin devuelve un array [valor, encontrado]
       const result = await invoke<[T | null, boolean]>('plugin:store|get', {
         rid,
