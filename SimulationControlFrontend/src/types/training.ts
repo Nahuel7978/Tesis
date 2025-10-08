@@ -36,7 +36,7 @@ export interface ModelParams {
   use_sde?: boolean; // Whether to use State Dependent Exploration (SDE)
   sde_sample_freq?: number; // Sample a new noise every n steps when using SDE
   use_sde_at_warmup?: boolean; // Whether to use SDE at the beginning of training (SAC only)
-  target_kl: number | undefined; // Target KL divergence threshold (PPO only)
+  target_kl?: number | undefined; // Target KL divergence threshold (PPO only)
   rms_prop_eps?: number; // Epsilon value for the RMSprop optimizer (A2C only)
   // Allow flexibility for custom params or parameters not explicitly listed
   [key: string]: any; 
@@ -70,8 +70,7 @@ export const DEFAULT_HYPERPARAMETERS: Record<TrainingAlgorithm, Partial<ModelPar
       tau: 1.0,
       gamma: 0.99,
       train_freq:4,
-      gradient_steps:1, 
-      n_steps:1, 
+      gradient_steps:1,  
       target_update_interval:10000, 
       exploration_fraction:0.1, 
       exploration_initial_eps:1.0, 
@@ -99,7 +98,7 @@ export const DEFAULT_HYPERPARAMETERS: Record<TrainingAlgorithm, Partial<ModelPar
     [TrainingAlgorithm.A2C]: {
       learning_rate:0.0007,
       n_steps:5,
-      amma:0.99,
+      gamma:0.99,
       gae_lambda:1.0,
       ent_coef:0.0,
       vf_coef:0.5,
@@ -119,7 +118,6 @@ export const DEFAULT_HYPERPARAMETERS: Record<TrainingAlgorithm, Partial<ModelPar
       gamma:0.99,
       train_freq:1,
       gradient_steps:1,
-      n_steps:1,
       ent_coef:'auto',
       target_update_interval:1,
       use_sde:false,
@@ -136,7 +134,6 @@ export const DEFAULT_HYPERPARAMETERS: Record<TrainingAlgorithm, Partial<ModelPar
       gamma:0.99,
       train_freq:1,
       gradient_steps:1,
-      n_steps:1,
       policy_delay:2,
       target_policy_noise:0.2,
       target_noise_clip:0.5,
@@ -151,7 +148,6 @@ export const DEFAULT_HYPERPARAMETERS: Record<TrainingAlgorithm, Partial<ModelPar
       gamma:0.99,
       train_freq:1,
       gradient_steps:1,
-      n_steps:1,
       verbose:2,
     }
   };
