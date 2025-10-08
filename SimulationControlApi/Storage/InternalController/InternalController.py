@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional
 
 
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import PPO, DQN, A2C, SAC, TD3
+from stable_baselines3 import PPO, DQN, A2C, SAC, TD3, DDPG
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
@@ -180,7 +180,8 @@ class TrainingController:
                 "DQN": DQN, 
                 "A2C": A2C,
                 "SAC": SAC,
-                "TD3": TD3
+                "TD3": TD3,
+                "DDPG": DDPG,
             }
             
             if model_name not in model_map:
@@ -304,7 +305,7 @@ class TrainingController:
         except Exception as e:
             self.__logger.error("Error crítico en el pipeline de entrenamiento:")
             self.__logger.error(str(e))
-            self.__state.set_state(1, str(e))
+            self.__state.set_state(2, str(e))
             self.__logger.error(traceback.format_exc())
             return 1
             
