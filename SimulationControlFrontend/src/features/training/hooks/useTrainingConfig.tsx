@@ -39,16 +39,7 @@ const getInitialConfig = (): TrainingConfig => ({
     policy: PolicyType.MlpPolicy,
     timesteps: 10000,
     model_params: { 
-      learning_rate: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].learning_rate ?? 0.001,
-      gamma: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].gamma ?? 0.99,
-      batch_size: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].batch_size ?? 32,
-      n_steps: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].n_steps ?? 128,
-      policy_delay: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].policy_delay ?? 2,
-      target_policy_noise: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].target_policy_noise ?? 0.2,
-      target_noise_clip: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].target_noise_clip ?? 0.5,
-      verbose: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].verbose ?? 1,
-      target_kl: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].target_kl ?? undefined,
-      ...DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN]
+      learning_rate: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].learning_rate ?? 0.001
     }
   }
 });
@@ -94,15 +85,7 @@ export const useTrainingConfig = (): UseTrainingConfigReturn => {
         model: algorithm,
         model_params: {
           ...DEFAULT_HYPERPARAMETERS[algorithm],
-          learning_rate: DEFAULT_HYPERPARAMETERS[algorithm].learning_rate ?? 0.001,
-          gamma: DEFAULT_HYPERPARAMETERS[algorithm].gamma ?? 0.99,
-          batch_size: DEFAULT_HYPERPARAMETERS[algorithm].batch_size ?? 32,
-          n_steps: DEFAULT_HYPERPARAMETERS[algorithm].n_steps ?? 128,
-          policy_delay: DEFAULT_HYPERPARAMETERS[algorithm].policy_delay ?? 2,
-          target_policy_noise: DEFAULT_HYPERPARAMETERS[algorithm].target_policy_noise ?? 0.2,
-          target_noise_clip: DEFAULT_HYPERPARAMETERS[algorithm].target_noise_clip ?? 0.5,
-          verbose: DEFAULT_HYPERPARAMETERS[algorithm].verbose ?? 1,
-          target_kl: DEFAULT_HYPERPARAMETERS[algorithm].target_kl ?? undefined,
+          learning_rate: DEFAULT_HYPERPARAMETERS[algorithm].learning_rate ?? 0.001
         }
       }
     }));
@@ -209,8 +192,8 @@ export const useTrainingConfig = (): UseTrainingConfigReturn => {
 
       console.log('[useTrainingConfig] Job created successfully:', response.job_id);
 
-      // Redirigir a la página del job
-      //navigate(`/jobs/${response.job_id}`);
+      navigate('/dashboard')
+
     } catch (err: any) {
       console.error('[useTrainingConfig] Error creating job:', err);
       
