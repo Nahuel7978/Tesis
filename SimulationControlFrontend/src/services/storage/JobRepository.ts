@@ -22,7 +22,6 @@ export class JobRepository {
    */
   async getJobSummaries(): Promise<JobSummary[]> {
     const keys = await this.storage.keys();
-    
     // Usamos Promise.all para obtener todos los jobs concurrentemente.
     const jobPromises = keys.map(key => this.storage.get<Job>(key));
     const allJobs = await Promise.all(jobPromises);
@@ -32,7 +31,6 @@ export class JobRepository {
 
     for (const job of allJobs) {
       if (job) {
-        console.log('Loaded job from storage:', job);
         summaries.push({
           id: job.id,
           state: job.state,
