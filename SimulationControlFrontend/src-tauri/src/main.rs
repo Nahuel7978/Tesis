@@ -20,9 +20,6 @@ fn main() {
     .plugin(tauri_plugin_store::Builder::default().build())
         // 🚀 La función .setup() es donde se ejecuta el código después de que la app se inicializa.
         .setup(|app| {
-            let store = app.store("simulation_control_store.json")?;
-            store.set("some-key", json!({ "value": 5 }));
-            let value = store.get("some-key").expect("Failed to get value from store");
             //---Logica de pantanlla completa---//
 
             // 1. Obtenemos la ventana principal. Asumimos que su etiqueta es 'main'.
