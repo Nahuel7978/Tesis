@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { jobsService, jobWebSocketService } from '@/services/ServiceIndex';
 import { jobRepository } from '@/services/storage/JobRepository';
@@ -13,8 +12,6 @@ import {
   JobState,
 } from '@/types/TypeIndex';
 
-
-const navigate = useNavigate();
 
 export default function TestPage() {
   const [logs, setLogs] = useState<string[]>([]);
@@ -295,7 +292,7 @@ export default function TestPage() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">API Services Test Page</h1>
 
-        {/* Stored Jobs Table */}
+        {/* Stored Jobs Table */} 
         <div className="bg-gray-800 rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Stored Jobs ({storedJobs.length})</h2>
