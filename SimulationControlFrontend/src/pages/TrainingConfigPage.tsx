@@ -30,16 +30,15 @@ const TrainingConfigPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <button
+        <div>
+        <button
             onClick={() => navigate('/test')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Volver al Dashboard</span>
-          </button>
-          
+            <span>Ir a Test</span>
+        </button>
+        </div>
+        <div className="max-w-5xl mx-auto px-6 py-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Configurar Nuevo Entrenamiento
@@ -48,11 +47,11 @@ const TrainingConfigPage: React.FC = () => {
               Selecciona el algoritmo, hiperparámetros y entorno para tu entrenamiento
             </p>
           </div>
-        </div>
+        
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Error Alert */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 animate-in fade-in duration-200">
