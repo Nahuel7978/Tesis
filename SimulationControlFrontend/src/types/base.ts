@@ -1,9 +1,11 @@
+
 export enum JobState {
     WAIT = 'WAIT',
     RUNNING = 'RUNNING', // WebSocket variant
     READY = 'READY',
     ERROR = 'ERROR',
-    TERMINATED = 'TERMINATED'
+    TERMINATED = 'TERMINATED',
+    CANCELLED = 'CANCELLED'
   } 
   
   export enum WebSocketMessageType {
