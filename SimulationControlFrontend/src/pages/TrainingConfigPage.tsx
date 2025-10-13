@@ -30,16 +30,9 @@ const TrainingConfigPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-        <div>
-        <button
-            onClick={() => navigate('/test')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <span>Ir a Test</span>
-        </button>
-        </div>
-        <div className="max-w-5xl mx-auto px-6 py-6">
-          <div>
+      <div className="max-w-7xl mx-auto px-4 py-8 md:px-8"> {/* Ajustado para mejor responsividad */}
+          {/* Título de la página */}
+          <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900">
               Configurar Nuevo Entrenamiento
             </h1>
@@ -47,11 +40,11 @@ const TrainingConfigPage: React.FC = () => {
               Selecciona el algoritmo, hiperparámetros y entorno para tu entrenamiento
             </p>
           </div>
-        
+
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-4 md:px-8">
         {/* Error Alert */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 animate-in fade-in duration-200">
@@ -103,10 +96,10 @@ const TrainingConfigPage: React.FC = () => {
         />
 
         {/* Action Buttons */}
-        <div className="mt-8 flex justify-end gap-4 pb-8">
+        <div className="mt-8 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pb-8">
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 w-full sm:w-auto"
             disabled={isSubmitting}
           >
             Cancelar
@@ -114,7 +107,7 @@ const TrainingConfigPage: React.FC = () => {
           <button
             onClick={submitTraining}
             disabled={isSubmitting || !isFormValid}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto"
           >
             {isSubmitting ? (
               <>

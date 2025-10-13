@@ -21,7 +21,7 @@ const TrainingSummary: React.FC<TrainingSummaryProps> = ({ config, isVisible }) 
         Resumen de Configuración
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
         {/* World File */}
         {worldFile && (
           <div className="bg-white rounded-lg p-4 shadow-sm">

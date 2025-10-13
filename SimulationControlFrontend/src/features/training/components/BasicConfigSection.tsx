@@ -79,9 +79,9 @@ const BasicConfigSection: React.FC<BasicConfigSectionProps> = ({
         <u>Configuración Básica</u>
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {/* World File Upload */}
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2 lg:col-span-2">
           <label className="block text-sm font-bold text-gray-700 mb-2">
             Mundo de Webots
           </label>
@@ -132,7 +132,7 @@ const BasicConfigSection: React.FC<BasicConfigSectionProps> = ({
         </div>
 
         {/* World Name */}
-        <div className="lg:col-span-2" >
+        <div className="md:col-span-2 lg:col-span-2" >
           <label className="block text-sm font-bold text-gray-700 mb-2">
             Nombre del Entrenamiento
           </label>

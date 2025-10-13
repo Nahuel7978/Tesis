@@ -44,6 +44,12 @@ const getStateConfig = (state: JobState) => {
         textColor: 'text-gray-700',
         icon: '⊗'
       };
+    case JobState.CANCELLED:
+      return {
+        label: 'Cancelado',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
+        icon: '⏹️',
+      };
     default:
       return {
         label: 'Desconocido',
@@ -71,7 +77,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job }) => {
   const stateConfig = getStateConfig(job.state);
 
   const handleClick = () => {
-    navigate(`/train/${job.id}`);
+    navigate(`/trainPage/${job.id}`);
   };
 
   return (
@@ -79,41 +85,46 @@ export const JobCard: React.FC<JobCardProps> = ({ job }) => {
       onClick={handleClick}
       className="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-200 hover:border-gray-300"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {job.worldName}
-            </h3>
-            <span className={`${stateConfig.bgColor} ${stateConfig.textColor} px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5`}>
-              <span>{stateConfig.icon}</span>
-              {stateConfig.label}
-            </span>
-          </div>
           
-          <div className="flex items-center gap-6 mt-2 text-sm text-gray-600">
-            <div className="flex items-center gap-1.5">
-              <span>Iniciado: {formatDate(job.createdAt)}</span>
-            </div>
-            
-            <span>•</span>
-            
-            <div className="flex items-center gap-1.5">
-              <span>Algoritmo: <span className="uppercase font-medium">{job.hyperparameters.model}</span></span>
-            </div>
-            
-            <span>•</span>
-            
-            <div className="flex items-center gap-1.5">
-              <span>Entorno: <span className="font-medium">{job.hyperparameters.def_robot}</span></span>
-            </div>
-          </div>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+      <div className="flex-1 w-full"> {/* Añadir w-full para ocupar todo el ancho disponible */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-0"> {/* Ajustes para el título y el estado */}
+          <h3 className="text-lg font-semibold text-gray-900">
+            {job.worldName}
+          </h3>
+          <span className={`${stateConfig.bgColor} ${stateConfig.textColor} px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 self-start sm:self-auto`}> {/* self-start para alinear en móvil */}
+            <span>{stateConfig.icon}</span>
+            {stateConfig.label}
+          </span>
         </div>
-        
-        <div className="text-gray-400 text-2xl ml-4">
-          →
+
+        {/* Información adicional: reorganizar para que se apile en pantallas pequeñas */}
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 mt-2 text-sm text-gray-600">
+          <div className="flex items-center gap-1.5">
+            <span>Iniciado: {formatDate(job.createdAt)}</span>
+          </div>
+
+          {/* El separador solo se muestra en pantallas medianas y más grandes */}
+          <span className="hidden md:block">•</span>
+
+          <div className="flex items-center gap-1.5">
+            <span>Algoritmo: <span className="uppercase font-medium">{job.hyperparameters.model}</span></span>
+          </div>
+
+          <span className="hidden md:block">•</span>
+
+          <div className="flex items-center gap-1.5">
+            <span>Entorno: <span className="font-medium">{job.hyperparameters.def_robot}</span></span>
+          </div>
         </div>
       </div>
+
+      <div className="text-gray-400 text-2xl mt-4 sm:mt-0 sm:ml-4 self-end sm:self-auto"> {/* Ajuste para el icono de flecha */}
+        →
+      </div>
     </div>
+
+      
+  </div>
   );
 };
