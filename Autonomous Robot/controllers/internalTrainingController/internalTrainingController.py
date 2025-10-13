@@ -19,13 +19,13 @@ sys.path.append(controllers_path)
 from controllers.robotController.robotController import RobotController
 
 def trainAgent(env):
-   # wrapped_env = Wrapper(env, timeout_seconds=10)
+    wrapped_env = TimeoutWrapper(env, timeout_seconds=10)
     try:
         log_dir = "./train_logs/"
         os.makedirs(log_dir, exist_ok=True)
 
         # Env con Monitor para registrar métricas adicionales (recompensas, etc.)
-        monitored_env = Monitor(env)
+        monitored_env = Monitor(wrapped_env)
 
         # Configurar el logger para escribir logs compatibles con TensorBoard
         new_logger = configure(log_dir, ["stdout", "tensorboard"])
@@ -86,7 +86,8 @@ def testAgent(env, model_path):
 #------------
 
 env = RobotController()
-testAgent(env, "/home/roman7978/Escritorio/job_30_model.zip")
+#testAgent(env, "/home/roman7978/Escritorio/job_30_model.zip")
+trainAgent(env)
 
 #wrapped_env = TimeoutWrapper(env, timeout_seconds=10)
 #wrapped_env.step(2)
