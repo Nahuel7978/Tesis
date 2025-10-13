@@ -80,7 +80,9 @@ class TrainingController:
             self.__logger.info(f"Captura de métricas configurada. Archivo: {jsonl_file}")
             
         except Exception as e:
-            self.__logger.error(f"Error al configurar captura de métricas: {e}")
+            msg=f"Error al configurar captura de métricas: {e}"
+            self.__logger.error(msg)
+            self.__state.set_state(2, str(msg))
             raise
     
     def restore_stdout(self):
@@ -114,7 +116,9 @@ class TrainingController:
             return config
             
         except Exception as e:
-            self.__logger.error(f"Error al cargar configuración: {e}")
+            msg=f"Error al cargar configuración: {e}"
+            self.__logger.error(msg)
+            self.__state.set_state(2, str(msg))
             raise
     
     def create_environment(self):
