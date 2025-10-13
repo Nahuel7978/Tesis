@@ -2,11 +2,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Dashboard } from '../pages/DashboardPage';
-import  TrainingConfigPage from '../pages/TrainingConfigPage';
+import { Dashboard } from '@/pages/DashboardPage';
+import  TrainingConfigPage from '@/pages/TrainingConfigPage';
 import TestPage from '@/pages/TestPage';
 // Importa aquí tu TrainPage cuando la tengas
-// import { TrainPage } from '@/features/training/pages/TrainPage';
+import  TrainPage  from '@/pages/TrainPage';
 
 export const AppRouter: React.FC = () => {
   return (
@@ -22,6 +22,8 @@ export const AppRouter: React.FC = () => {
           {/* Cargar Mundo */}
           <Route path="/training/new" element={<TrainingConfigPage />} />
           
+          <Route path="/trainPage/:jobId" element={<TrainPage/>} />
+
           <Route path="/test" element={<TestPage/>} />
 
           {/* Detalle de Training (cuando lo implementes) */}
