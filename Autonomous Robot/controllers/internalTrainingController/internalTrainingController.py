@@ -64,11 +64,31 @@ def trainAgent(env):
         env.close()
         sys.exit(0)
     
+def testAgent(env, model_path):
+    try:
+        model = DQN.load(model_path)
+        done = False
 
+        obs = env.reset()
+        while done is False:
+            action, _states = model.predict(obs)
+            obs, reward, done, info = env.step(action)
+            
+
+    except Exception as e:
+        print(f"Error al cargar o ejecutar el modelo: {e}")
+        env.close()
+        sys.exit(0)
+    
+    finally:
+        env.close()
+        sys.exit(0)
 #------------
-print("Entrenando agente...")
+
 env = RobotController()
-wrapped_env = TimeoutWrapper(env, timeout_seconds=10)
-wrapped_env.step(2)
+testAgent(env, "/home/roman7978/Escritorio/job_30_model.zip")
+
+#wrapped_env = TimeoutWrapper(env, timeout_seconds=10)
+#wrapped_env.step(2)
 #trainAgent(env)
 #check_env(env, warn=True)
