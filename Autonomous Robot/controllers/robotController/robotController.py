@@ -267,7 +267,19 @@ class RobotController(RobotSupervisorEnv):
             self.simulationResetPhysics()
             super(Supervisor, self).step(int(self.getBasicTimeStep()))
             return self.get_default_observation()
+        else:
+            # Si es un timeout o alguna otra condición de fin de episodio, reiniciar a un punto inicial fijo o aleatorio predefinido.
+              # Aquí podrías tener una lista de puntos de inicio seguros.
+            # Por simplicidad, volvamos al primer punto de inicio definido
+            self.__translation.setSFVec3f(self.__startPoints[0]) 
+            self.__rotation.setSFRotation(self.__startRotation[0]) 
 
+        self.done = 'False' # Asegúrate de que esto se resetee
+        self.default() # Llama a tu método default para reiniciar sensores, etc.
+        self.simulationResetPhysics()
+        # Es crucial que Webots procese estos cambios antes de obtener observaciones.
+        # super(Supervisor, self).step(int(self.getBasicTimeStep())) fuerza un paso en el simulador.
+        super(Supervisor, self).step(int(self.getBasicTimeStep())) 
         
         return self.get_observations()
 
