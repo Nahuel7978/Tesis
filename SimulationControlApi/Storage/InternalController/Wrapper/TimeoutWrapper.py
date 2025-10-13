@@ -1,5 +1,6 @@
 import gym
 import threading
+import traceback # Importar traceback
 
 class TimeoutWrapper(gym.Wrapper):
     def __init__(self, env, timeout_seconds=10):
@@ -37,11 +38,13 @@ class TimeoutWrapper(gym.Wrapper):
                 obs = self.env.reset()
                 return obs, -10.0, False, {"timeout": True, "timeout_seconds": self.__timeout_seconds}
             except Exception as e:
-                raise(f"[ERROR] Falló en reset: {e}")
+                print(f"[ERROR] Falló en reset: {e}")
+                raise
         
         # Si hay excepción en el hilo, relanzarla
         if exception[0] is not None:
-            raise exception[0]
+            exc_type, exc_value, exc_traceback = exception[0]
+            raise exc_type.with_traceback(exc_traceback)
             
         return result[0]
         
