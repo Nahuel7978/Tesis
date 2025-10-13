@@ -33,7 +33,7 @@ export interface JobStatusResponse {
 // Training metrics received from API/WebSocket
 export interface TrainingMetrics {
   ep_len_mean: number;
-  ep_rew_mean: number;
+  ep_rew_mean?: number;
   exploration_rate: number;
   episodes: number;
   fps: number;
