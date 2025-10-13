@@ -27,3 +27,6 @@ tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", br
 
 tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 
+tauri-plugin-dialog = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" } 
+tauri-plugin-fs = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" } 
+

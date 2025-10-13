@@ -18,6 +18,9 @@ use serde_json::json;
 fn main() {
     tauri::Builder::default()
     .plugin(tauri_plugin_store::Builder::default().build())
+    .plugin(tauri_plugin_dialog::init()) 
+    .plugin(tauri_plugin_fs::init())
+
         // 🚀 La función .setup() es donde se ejecuta el código después de que la app se inicializa.
         .setup(|app| {
             //---Logica de pantanlla completa---//
