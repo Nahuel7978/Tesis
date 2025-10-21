@@ -38,9 +38,8 @@ const getInitialConfig = (): TrainingConfig => ({
     model: TrainingAlgorithm.DQN,
     policy: PolicyType.MlpPolicy,
     timesteps: 10000,
-    model_params: { 
-      learning_rate: DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN].learning_rate ?? 0.001
-    }
+    model_params:DEFAULT_HYPERPARAMETERS[TrainingAlgorithm.DQN]
+    
   }
 });
 
