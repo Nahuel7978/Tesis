@@ -3,7 +3,7 @@ import { TrainingAlgorithm, PolicyType } from './base';
 // Model hyperparameters - extensible for different algorithms
 export interface ModelParams {
   // Common to most algorithms
-  learning_rate: number;
+  learning_rate?: number;
   gamma?: number; // Discount factor
   batch_size?: number;
   n_steps?: number; // Number of steps to run for each environment per update
