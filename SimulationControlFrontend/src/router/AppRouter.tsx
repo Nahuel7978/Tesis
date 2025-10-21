@@ -7,6 +7,7 @@ import  TrainingConfigPage from '@/pages/TrainingConfigPage';
 import TestPage from '@/pages/TestPage';
 // Importa aquí tu TrainPage cuando la tengas
 import  TrainPage  from '@/pages/TrainPage';
+import ConfigurationPage from '@/pages/ConfigurationPage';
 
 export const AppRouter: React.FC = () => {
   return (
@@ -23,6 +24,8 @@ export const AppRouter: React.FC = () => {
           <Route path="/training/new" element={<TrainingConfigPage />} />
           
           <Route path="/trainPage/:jobId" element={<TrainPage/>} />
+
+          <Route path="/configPage" element={<ConfigurationPage/>} />
 
           <Route path="/test" element={<TestPage/>} />
 
