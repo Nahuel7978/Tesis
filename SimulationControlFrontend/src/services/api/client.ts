@@ -1,9 +1,10 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ApiConfig, ApiErrorResponse } from '@/types/TypeIndex';
+import { configurationStorage } from '../storage/ConfigurationStorage';
 
 // Configuración por defecto.
 const DEFAULT_CONFIG: ApiConfig = {
-  baseUrl: import.meta.env.API_BASE_URL || 'http://localhost:8000/SimulationControlApi/v1',
+  baseUrl:'http://localhost:8000/SimulationControlApi/v1',
   timeout: 30000, // 30 segundos
   retryAttempts: 3,
   retryDelay: 1000 // 1 segundo
@@ -12,12 +13,24 @@ const DEFAULT_CONFIG: ApiConfig = {
 class ApiClient {
   private client: AxiosInstance;
   private config: ApiConfig;
+  private base: string;
 
   constructor(config: Partial<ApiConfig> = {}) { //config puede contener solo algunas de las propiedades de ApiConfig
     this.config = { ...DEFAULT_CONFIG, ...config };//Copio todos los valores de DEFAULT_CONFIG y los sobreescribo con los valores de config
+    this.base = this.config.baseUrl;
+
+    try {
+      // Cargar configuración almacenada
+      configurationStorage.getConfiguration().then(storedConfig => { 
+        this.base = storedConfig.httpBaseUrl;
+      })
+    }catch (error) {
+      this.base = this.config.baseUrl;
+    }
+
     
     this.client = axios.create({
-      baseURL: this.config.baseUrl,
+      baseURL: this.base,
       timeout: this.config.timeout,
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +65,7 @@ class ApiClient {
         return response;
       },
       async (error: AxiosError<ApiErrorResponse>) => {
-        console.error('[API Response Error]', error.response?.data || error.message);
+        //console.error('[API Response Error]', error.response?.data || error.message);
         
         // Retry logic para errores de red
         const config = error.config;
