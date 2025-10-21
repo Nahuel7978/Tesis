@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Upload, FileArchive, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface FileUploadZoneProps {
@@ -19,29 +19,12 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   description = 'Archivo del mundo de Webots comprimido'
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const validateFile = (file: File): boolean => {
-    setValidationError(null);
-
-    // Validar extensión
-    if (!file.name.toLowerCase().endsWith('.zip')) {
-      setValidationError('El archivo debe tener extensión .zip');
-      return false;
-    }
-
-    // Validar tamaño
-    const sizeMB = file.size / 1024 / 1024;
-    if (sizeMB > maxSizeMB) {
-      setValidationError(`El archivo excede el tamaño máximo de ${maxSizeMB}MB`);
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleFileSelect = (selectedFile: File | null) => {
+  const handleFileSelect = useCallback((selectedFile: File | null) => {
+    console.log('handleFileSelect called with:', selectedFile);
     if (!selectedFile) {
       onFileChange(null);
       setValidationError(null);
@@ -51,9 +34,84 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     if (validateFile(selectedFile)) {
       onFileChange(selectedFile);
     } else {
+      console.log('File validation failed');
       onFileChange(null);
     }
-  };
+  },[onFileChange]);
+
+  useEffect(() => {
+    const dropZone = dropZoneRef.current;
+    if (!dropZone) return;
+  
+    let dragCounter = 0;
+  
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter++;
+      setIsDragging(true);
+    };
+  
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    };
+  
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter--;
+      if (dragCounter === 0) {
+        setIsDragging(false);
+      }
+    };
+  
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      dragCounter = 0;
+      setIsDragging(false);
+
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        const droppedFile = e.dataTransfer.files[0];
+        if(droppedFile!=undefined)
+          handleFileSelect(droppedFile); // ← Ahora usa la función actualizada
+      }
+    };
+  
+    dropZone.addEventListener('dragenter', handleDragEnter, true);
+    dropZone.addEventListener('dragover', handleDragOver, true);
+    dropZone.addEventListener('dragleave', handleDragLeave, true);
+    dropZone.addEventListener('drop', handleDrop, true);
+  
+    return () => {
+      dropZone.removeEventListener('dragenter', handleDragEnter, true);
+      dropZone.removeEventListener('dragover', handleDragOver, true);
+      dropZone.removeEventListener('dragleave', handleDragLeave, true);
+      dropZone.removeEventListener('drop', handleDrop, true);
+    };
+  }, [handleFileSelect]); 
+
+  const validateFile = useCallback((file: File): boolean => {
+    setValidationError(null);
+
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      setValidationError('El archivo debe tener extensión .zip');
+      return false;
+    }
+
+    const sizeMB = file.size / 1024 / 1024;
+    if (sizeMB > maxSizeMB) {
+      setValidationError(`El archivo excede el tamaño máximo de ${maxSizeMB}MB`);
+      return false;
+    }
+
+    return true;
+  },[maxSizeMB]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
@@ -68,28 +126,6 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const droppedFile = e.dataTransfer.files[0];
-    if(droppedFile!=undefined)
-        handleFileSelect(droppedFile);
-  };
-
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
@@ -98,16 +134,16 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+      )}
 
       {!file ? (
         <>
           <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            ref={dropZoneRef}
             onClick={() => fileInputRef.current?.click()}
             className={`
               border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
@@ -118,7 +154,10 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               ${validationError ? 'border-red-300 bg-red-50' : ''}
             `}
           >
-            <div className="flex flex-col items-center gap-3">
+            <div 
+              className="flex flex-col items-center gap-3 select-none"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
               <div className={`
                 w-16 h-16 rounded-full flex items-center justify-center transition-colors
                 ${isDragging ? 'bg-blue-100' : 'bg-gray-100'}
@@ -145,6 +184,7 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               accept={accept}
               onChange={handleInputChange}
               className="hidden"
+              style={{ display: 'none' }}
             />
           </div>
 
@@ -185,7 +225,6 @@ const FileUploadZone: React.FC<FileUploadZoneProps> = ({
             </button>
           </div>
 
-          {/* Progress bar visual */}
           <div className="h-1 bg-gradient-to-r from-green-400 to-blue-500"></div>
         </div>
       )}
