@@ -6,6 +6,7 @@ import {
   TrainingHyperparameters,
   ApiErrorResponse
 } from '@/types/TypeIndex';
+import { dialogService } from '@/services/tauri/dialogService';
 
 export class JobsService {
   /**
@@ -139,15 +140,29 @@ export class JobsService {
    * @param blob - Blob a descargar
    * @param filename - Nombre del archivo
    */
-  downloadBlob(blob: Blob, filename: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+  async downloadBlob(blob: Blob, filename: string): Promise<void> {
+    // Si estamos en Tauri, usar diálogo de guardado
+    if (dialogService.isTauriAvailable()) {
+      try {
+        const saved = await dialogService.saveFile(blob, filename);
+        if (saved) {
+          console.log(`[JobsService] Archivo guardado exitosamente: ${filename}`);
+        }
+      } catch (error) {
+        console.error('[JobsService] Error al guardar archivo:', error);
+        throw error;
+      }
+    } else {
+      // Fallback para navegador web (descarga directa)
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }
   }
 }
 
