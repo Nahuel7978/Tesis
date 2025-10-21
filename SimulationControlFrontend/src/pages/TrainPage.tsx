@@ -103,13 +103,24 @@ const TrainPage = () => {
           ...localJob,
           state: apiStatus.state as JobState,
           lastUpdated: new Date().toISOString(),
+          endTimestamp: apiStatus.end_timestamp || localJob.endTimestamp,
+          errors: apiStatus.errors || [],
         };
 
         setJob(updatedJob);
         await jobRepository.saveJob(updatedJob);
       } catch (apiError) {
         console.warn('[TrainPage] Error al obtener estado desde API:', apiError);
-        // Continuar con datos locales
+        // Actualizar job con el estado más reciente
+        const updatedJob: Job = {
+          ...localJob,
+          state: JobState.ERROR,
+          lastUpdated: new Date().toISOString(),
+          errors: ['Error al obtener estado desde API.']
+        };
+
+        setJob(updatedJob);
+        await jobRepository.saveJob(updatedJob);
       }
 
       setLoading(false);
@@ -215,16 +226,19 @@ const TrainPage = () => {
 
     try {
       const blob = await jobsService.downloadModel(jobId);
-      jobsService.downloadBlob(blob, `${jobId}_model.zip`);
+      await jobsService.downloadBlob(blob, `${jobId}_model.zip`);
     } catch (err: any) {
       console.error('[TrainPage] Error descargando modelo:', err);
       
       const errorMessage = err?.response?.data?.message || err?.message || '';
       
       if (errorMessage.toLowerCase().includes('checkpoint')) {
-        alert(
-          'El modelo completo no está disponible. Se descargará un checkpoint del último estado guardado.'
+        const downloadCheckpoint = window.confirm(
+          'El modelo completo no está disponible. ¿Deseas descargar un checkpoint?'
         );
+        if (downloadCheckpoint) {
+          await handleDownloadCheckpoint();
+        }
       } else {
         alert('Aún no hay un modelo entrenado disponible para descargar.');
       }
@@ -239,7 +253,7 @@ const TrainPage = () => {
 
     try {
       const blob = await jobsService.downloadTensorboard(jobId);
-      jobsService.downloadBlob(blob, `${jobId}_tensorboard.zip`);
+      await jobsService.downloadBlob(blob, `${jobId}_tensorboard.zip`);
     } catch (err) {
       console.error('[TrainPage] Error descargando tensorboard:', err);
       alert('Error al descargar Tensorboard. Por favor, intenta más tarde.');
@@ -254,7 +268,7 @@ const TrainPage = () => {
 
     try {
       const blob = await jobsService.downloadModel(jobId);
-      jobsService.downloadBlob(blob, `${jobId}_checkpoint.zip`);
+      await jobsService.downloadBlob(blob, `${jobId}_checkpoint.zip`);
     } catch (err) {
       console.error('[TrainPage] Error descargando checkpoint:', err);
       alert('Error al descargar el checkpoint. Al haber habido un error es posible que no exista un checkpoint disponible.');
@@ -303,7 +317,10 @@ const TrainPage = () => {
               Iniciado: {new Date(job.createdAt).toLocaleString('es-AR')}
             </p>
           </div>
+          
           <JobStateDisplay state={job.state} wsState={wsState} />
+            
+          
         </div>
 
         {/* Contenido basado en estado */}
