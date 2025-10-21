@@ -66,7 +66,7 @@ def trainAgent(env):
     
 def testAgent(env, model_path):
     try:
-        model = DQN.load(model_path)
+        model = PPO.load(model_path)
         done = False
 
         obs = env.reset()
@@ -86,8 +86,8 @@ def testAgent(env, model_path):
 #------------
 
 env = RobotController()
-#testAgent(env, "/home/roman7978/Escritorio/job_30_model.zip")
-trainAgent(env)
+testAgent(env, "/home/roman7978/Escritorio/job_32_model.zip")
+#trainAgent(env)
 
 #wrapped_env = TimeoutWrapper(env, timeout_seconds=10)
 #wrapped_env.step(2)
