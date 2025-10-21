@@ -5,12 +5,13 @@ import {
     TrainingMetrics,
     WebSocketMessageType
   } from '@/types/TypeIndex';
+import { configurationStorage } from '../storage/ConfigurationStorage';
   
   type MessageCallback = (message: TrainingMetrics | WebSocketStatusMessage) => void;
   type StatusCallback = (state: WebSocketState) => void;
   
   const DEFAULT_WS_CONFIG: WebSocketConfig = {
-    url: import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000/SimulationControlApi/ws/v1',
+    url:'ws://localhost:8000/SimulationControlApi/ws/v1',
     reconnectAttempts: 5,
     reconnectDelay: 3000,
     heartbeatInterval: 30000
@@ -33,6 +34,15 @@ import {
   
     constructor(config: Partial<WebSocketConfig> = {}) {
       this.config = { ...DEFAULT_WS_CONFIG, ...config };
+      try{
+        // Cargar configuración almacenada
+        configurationStorage.getConfiguration().then(storedConfig => {
+          this.config.url = storedConfig.wsBaseUrl;
+        }) 
+      }catch(error){
+        console.log("Error loading stored configuration for WebSocketService, using default URL");
+        this.config = { ...DEFAULT_WS_CONFIG, ...config };
+      }
     }
   
     /**
