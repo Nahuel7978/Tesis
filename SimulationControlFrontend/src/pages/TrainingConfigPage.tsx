@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import BasicConfigSection from '../features/training/components/BasicConfigSection'; // Ensure this path is correct
