@@ -21,6 +21,12 @@ export const Sidebar: React.FC = () => {
       label: 'Cargar Mundo',
       icon: '🦾',
       path: '/training/new'
+    },
+    {
+      id: 'Configuracion',
+      label: 'Configuración',
+      icon: '🧰',
+      path: '/configPage'
     }
   ];
 
