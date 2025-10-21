@@ -1,6 +1,6 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default-capabilities",
+  "identifier": "default-capabilities, draggable-window",
   "description": "enables the default permissions",
   "windows": [
     "main"
@@ -8,7 +8,20 @@
   "permissions": [
     "core:default",
     "store:default",
+    "core:window:allow-start-dragging",
     "dialog:default",
-    "fs:default"
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "fs:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$DOWNLOAD/**", "with": ["read", "write"] },
+        { "path": "$DESKTOP/**", "with": ["read", "write"] },
+        { "path": "$DOCUMENT/**", "with": ["read", "write"] },
+        { "path": "$HOME/**", "with": ["read", "write"] }
+      ],
+      "deny": []
+    }
   ]
 }

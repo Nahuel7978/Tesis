@@ -15,7 +15,8 @@
         "title": "Simulation Control",
         "resizable": true,
         "fullscreen": false,
-        "label": "main"
+        "label": "main",
+        "dragDropEnabled": false
       }
     ],
     "security": {
@@ -33,4 +34,5 @@
       "icons/icon.ico"
     ]
   }
+  
 }
