@@ -40,25 +40,34 @@ const JobActions = ({
         return (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Acciones</h2>
-            <button
-              onClick={onStopTraining}
-              disabled={isStopping}
-              className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              {isStopping ? (
-                <>
-                  <span className="animate-spin">⏳</span>
-                  Deteniendo...
-                </>
-              ) : (
-                <>
-                  ⏹️ Detener Entrenamiento
-                </>
-              )}
-            </button>
-            <p className="text-sm text-gray-600 mt-3">
-              ⚠️ Esta acción cancelará el entrenamiento y no se podrá reanudar
-            </p>
+            <div className='flex flex-col md:flex-row gap-4'>
+              
+                <button
+                    onClick={onDownloadCheckpoint}
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                  ⬇️ Descargar Checkpoint
+                </button>
+              
+              
+                <button
+                  onClick={onStopTraining}
+                  disabled={isStopping}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {isStopping ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      Deteniendo...
+                    </>
+                  ) : (
+                    <>
+                      ⏹️ Detener Entrenamiento
+                    </>
+                  )}
+                  
+                </button>
+            </div>
           </div>
         );
 
@@ -79,7 +88,15 @@ const JobActions = ({
               >
                 📊 Descargar Tensorboard
               </button>
+              <button
+                onClick={onDeleteJob}
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                🗑️ Eliminar del Historial
+            </button>
             </div>
+            
+            
             <p className="text-sm text-green-600 mt-3 text-center">
               ✅ Entrenamiento completado exitosamente
             </p>
@@ -91,25 +108,28 @@ const JobActions = ({
           <div className="bg-white rounded-lg shadow p-6 space-y-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h3 className="text-red-800 font-semibold mb-2">❌ Error en el entrenamiento</h3>
-              <p className="text-red-600 text-sm">
-                El entrenamiento falló debido a:
-              </p>
               {job.errors ? (
                 <p className="text-red-600 text-sm italic mt-1">
-                  {job.errors}
+                  El entrenamiento falló debido a: {job.errors}
                 </p>
               ) : (
-                <p className='text-red-600 text-sm italic mt-1'>Un error inesperado</p>
+                <p className='text-red-600 text-sm italic mt-1'>
+                  El entrenamiento falló debido a: Un error inesperado
+                </p>
               )}
             </div>
             
-            <div className="flex flex-col md:flex-row gap-4">
-              <button
-                onClick={onDownloadCheckpoint}
-                className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
-              >
-                ⬇️ Descargar Checkpoint
-              </button>
+            
+              <div className="flex flex-col md:flex-row gap-4">
+              {job.errors?.length==0 ? (
+                <button
+                  onClick={onDownloadCheckpoint}
+                  className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  ⬇️ Descargar Checkpoint
+                </button>
+                ):null
+              }
               <button
                 onClick={onDeleteJob}
                 className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
