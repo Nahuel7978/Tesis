@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Upload, FileArchive, X } from 'lucide-react';
 import { PolicyType, TrainingAlgorithm } from '@/types/base';
+import FileUploadZone from './FileUploadZip';
 
 interface BasicConfigSectionProps {
   worldFile: File | null;
@@ -41,38 +42,12 @@ const BasicConfigSection: React.FC<BasicConfigSectionProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.name.endsWith('.zip')) {
-      onWorldFileChange(file);
-    } else {
-      alert('Por favor selecciona un archivo .zip válido');
-    }
-  };
-
   const handleRemoveFile = () => {
     onWorldFileChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.zip')) {
-      onWorldFileChange(file);
-    } else {
-      alert('Por favor selecciona un archivo .zip válido');
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">
@@ -87,25 +62,14 @@ const BasicConfigSection: React.FC<BasicConfigSectionProps> = ({
           </label>
           
           {!worldFile ? (
-            <div
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-900 mb-1">
-                Arrastra un archivo .zip o haz clic para seleccionar
-              </p>
-              <p className="text-xs text-gray-500">
-                Archivo del mundo de Webots comprimido
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
+            <div>
+              <FileUploadZone
+                file={worldFile}
+                onFileChange={onWorldFileChange}
                 accept=".zip"
-                onChange={handleFileSelect}
-                className="hidden"
+                maxSizeMB={100}
+                label=""
+                description="Archivo del mundo de Webots comprimido"
               />
             </div>
           ) : (
